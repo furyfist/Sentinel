@@ -2,7 +2,7 @@
 
 AI-powered engineering observability agent for the [Pirates of the Coral-bean](https://www.wemakedevs.org/hackathons/coral) hackathon (WeMakeDevs × Coral).
 
-Sentinel cross-queries GitHub, Sentry, Langfuse, Datadog, and Slack via Coral's SQL interface — then uses Claude to narrate what went wrong, why, and who caused it.
+Sentinel cross-queries GitHub, Sentry, Langfuse, Datadog, and Slack via Coral's SQL interface — then uses Groq (llama-3.3-70b-versatile) to narrate what went wrong, why, and who caused it.
 
 ## Three Modes
 
@@ -19,7 +19,7 @@ GitHub + Sentry + Datadog + Slack + Langfuse
               ↓ (SQL via Coral)
          Sentinel Agent (Python)
               ↓
-         Claude API (narration)
+         Groq API (narration)
               ↓
     Slack / GitHub / SQLite / Web UI
 ```
@@ -31,7 +31,7 @@ GitHub + Sentry + Datadog + Slack + Langfuse
 - Python 3.12+
 - Node.js 20+
 - [Coral](https://withcoral.com) binary
-- API keys for: GitHub, Sentry, Datadog, Slack, Langfuse, Anthropic
+- API keys for: GitHub, Sentry, Datadog, Slack, Langfuse, Groq
 
 ### 2. Install Coral
 
@@ -65,7 +65,13 @@ pip install -r requirements.txt
 python scripts/run_agent.py
 ```
 
-### 7. Run the web UI
+### 7. Run the API
+
+```bash
+uvicorn api.main:app --reload --port 8000
+```
+
+### 8. Run the web UI
 
 ```bash
 cd web && npm install && npm run dev
