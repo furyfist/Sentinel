@@ -29,7 +29,7 @@ coral sql --format json "
     s.first_seen
   FROM github.commits g
   JOIN sentry.issues s
-    ON s.first_seen > g.commit__author__date
+    ON s.first_seen > CAST(g.commit__author__date AS TIMESTAMP)
   WHERE g.owner = '${GITHUB_OWNER}'
     AND g.repo  = '${GITHUB_REPO}'
   LIMIT 5
@@ -53,12 +53,12 @@ coral sql --format json "
     SUM(l.total_cost)   AS cost_after
   FROM github.commits g
   LEFT JOIN langfuse.observations l
-    ON l.start_time > g.commit__author__date
-   AND l.start_time < g.commit__author__date + INTERVAL '24 hours'
+    ON l.start_time > CAST(g.commit__author__date AS TIMESTAMP)
+   AND l.start_time < CAST(g.commit__author__date AS TIMESTAMP) + INTERVAL '24 hours'
    AND l.type = 'GENERATION'
   WHERE g.owner = '${GITHUB_OWNER}'
     AND g.repo  = '${GITHUB_REPO}'
-    AND g.commit__author__date > NOW() - INTERVAL '7 days'
+    AND CAST(g.commit__author__date AS TIMESTAMP) > NOW() - INTERVAL '7 days'
   GROUP BY g.sha, g.commit__message, g.commit__author__date
   ORDER BY cost_after DESC NULLS LAST
   LIMIT 5
@@ -82,13 +82,13 @@ coral sql --format json "
     SUM(l.total_cost)     AS cost_after
   FROM github.commits g
   LEFT JOIN sentry.issues s
-    ON s.first_seen BETWEEN g.commit__author__date AND g.commit__author__date + INTERVAL '24 hours'
+    ON s.first_seen BETWEEN g.commit__author__date AND CAST(g.commit__author__date AS TIMESTAMP) + INTERVAL '24 hours'
   LEFT JOIN langfuse.observations l
-    ON l.start_time BETWEEN g.commit__author__date AND g.commit__author__date + INTERVAL '24 hours'
+    ON l.start_time BETWEEN g.commit__author__date AND CAST(g.commit__author__date AS TIMESTAMP) + INTERVAL '24 hours'
    AND l.type = 'GENERATION'
   WHERE g.owner = '${GITHUB_OWNER}'
     AND g.repo  = '${GITHUB_REPO}'
-    AND g.commit__author__date > NOW() - INTERVAL '7 days'
+    AND CAST(g.commit__author__date AS TIMESTAMP) > NOW() - INTERVAL '7 days'
   GROUP BY g.sha, g.commit__message
   ORDER BY errors_after DESC NULLS LAST
   LIMIT 5
