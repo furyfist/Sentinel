@@ -1,22 +1,12 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import ReactMarkdown from 'react-markdown'
 import type { DigestEntry } from '@/types'
 
 interface DigestSectionProps {
   digest: DigestEntry
   compact?: boolean
-}
-
-function renderMarkdown(text: string) {
-  return text.split('\n').map((line, i) => {
-    if (line.startsWith('## '))
-      return <h3 key={i} className="text-sm font-semibold text-slate-700 mt-4 mb-1.5 first:mt-0">{line.replace('## ', '')}</h3>
-    if (line.startsWith('* ') || line.startsWith('- '))
-      return <li key={i} className="text-sm text-slate-600 ml-3">{line.slice(2)}</li>
-    if (line.trim() === '') return null
-    return <p key={i} className="text-sm text-slate-600">{line}</p>
-  })
 }
 
 export function DigestSection({ digest, compact = false }: DigestSectionProps) {
@@ -37,9 +27,17 @@ export function DigestSection({ digest, compact = false }: DigestSectionProps) {
           <span className="text-xs text-red-500 font-medium">${digest.cost_impact.toFixed(2)} cost</span>
         )}
       </div>
-      <ul className={`space-y-0.5 ${compact ? 'line-clamp-6' : ''}`}>
-        {renderMarkdown(digest.report_text ?? '')}
-      </ul>
+      <div className={`prose prose-sm prose-slate max-w-none
+        [&>p]:text-slate-600 [&>p]:leading-relaxed [&>p]:mb-2
+        [&>ul]:text-slate-600 [&>ul]:space-y-1 [&>ul]:pl-4
+        [&>ol]:text-slate-600 [&>ol]:space-y-1 [&>ol]:pl-4
+        [&_li]:leading-relaxed
+        [&_strong]:text-slate-800 [&_strong]:font-semibold
+        [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:text-slate-700 [&>h2]:mt-4 [&>h2]:mb-1.5 [&>h2]:first:mt-0
+        [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:text-slate-700 [&>h3]:mt-3 [&>h3]:mb-1
+        ${compact ? 'line-clamp-6' : ''}`}>
+        <ReactMarkdown>{digest.report_text ?? ''}</ReactMarkdown>
+      </div>
     </motion.div>
   )
 }

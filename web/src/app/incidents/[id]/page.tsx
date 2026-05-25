@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import ReactMarkdown from 'react-markdown'
 import { api } from '@/lib/api'
 import type { IncidentReport } from '@/types'
 
@@ -51,7 +52,17 @@ export default function IncidentDetailPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Incident Report</h2>
-        <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">{incident.report_text}</pre>
+        <div className="prose prose-sm prose-slate max-w-none
+          [&>p]:text-slate-700 [&>p]:leading-relaxed [&>p]:mb-3
+          [&>ol]:text-slate-700 [&>ol]:space-y-2 [&>ol]:pl-4
+          [&>ul]:text-slate-700 [&>ul]:space-y-2 [&>ul]:pl-4
+          [&_li]:leading-relaxed
+          [&_strong]:text-slate-800 [&_strong]:font-semibold
+          [&>h1]:text-base [&>h1]:font-semibold [&>h1]:text-slate-800 [&>h1]:mb-2
+          [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:text-slate-700 [&>h2]:mb-1.5
+          [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:text-slate-700 [&>h3]:mb-1">
+          <ReactMarkdown>{incident.report_text}</ReactMarkdown>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
