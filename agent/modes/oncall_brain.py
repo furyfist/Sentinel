@@ -96,6 +96,22 @@ def run(dry_run: bool = False) -> None:
         )
         print(f"        Issue created: {issue_url}")
 
+    # Persist — always, regardless of dry_run
+    related_commits = [r.get("sha", "") for r in commit_rows if r.get("sha")]
+    related_errors = [r.get("error_title", "") for r in error_rows if r.get("error_title")]
+    incident_id = memory.save_incident(
+        detection_type="cost_spike",
+        severity="high" if spike_detected else "info",
+        report_text=report,
+        related_commits=related_commits,
+        related_errors=related_errors,
+        cost_impact=current_hourly_cost,
+        slack_thread_ts=slack_ts,
+    )
+    print(f"  Incident saved to SQLite (id={incident_id})")
+    if issue_url:
+        print(f"  GitHub issue: {issue_url}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sentinel On-Call Brain — Mode A")
