@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "coral": {
+      "command": "coral",
+      "args": ["mcp"],
+      "env": {}
+    }
+  }
+}
