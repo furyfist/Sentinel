@@ -2,3 +2,7 @@
 .claude.md
 .env
 venv/
+__pycache__/
+*.pyc
+*.pyo
+sentinel.db
