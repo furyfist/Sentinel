@@ -1,6 +1,8 @@
 import argparse
 from agent import query_library, memory, narrator
 from agent.anomaly_detector import detect_cost_spike
+from agent.actions import slack_poster, github_issue_creator
+from agent.config import SLACK_INCIDENTS_CHANNEL
 
 
 def _compute_baseline(cost_rows: list) -> float:
@@ -71,6 +73,28 @@ def run(dry_run: bool = False) -> None:
     print("\n--- INCIDENT REPORT ---")
     print(report)
     print("--- END REPORT ---\n")
+
+    # Step 6 — post to Slack
+    print("  [6/7] Posting to Slack...")
+    slack_ts = None
+    if dry_run:
+        print(f"        [DRY RUN] Would post to {SLACK_INCIDENTS_CHANNEL}")
+    else:
+        slack_ts = slack_poster.post_to_slack(SLACK_INCIDENTS_CHANNEL, report)
+        print(f"        Posted. ts={slack_ts}")
+
+    # Step 7 — create GitHub issue
+    print("  [7/7] Creating GitHub issue...")
+    issue_url = None
+    if dry_run:
+        print("        [DRY RUN] Would create GitHub issue")
+    else:
+        first_commit = commit_rows[0].get("commit_message", "unknown") if commit_rows else "unknown"
+        issue_url = github_issue_creator.create_incident_issue(
+            title=f"[Sentinel] Cost spike detected — possible cause: {first_commit[:60]}",
+            body=report,
+        )
+        print(f"        Issue created: {issue_url}")
 
 
 if __name__ == "__main__":
