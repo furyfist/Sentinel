@@ -45,8 +45,8 @@ require_env DD_API_KEY DD_APPLICATION_KEY
 DD_API_KEY="$DD_API_KEY" DD_APPLICATION_KEY="$DD_APPLICATION_KEY" coral source add datadog || log "Datadog source already added, skipping."
 
 log "Adding Slack source..."
-require_env SLACK_BOT_TOKEN
-SLACK_BOT_TOKEN="$SLACK_BOT_TOKEN" coral source add slack || log "Slack source already added, skipping."
+require_env SLACK_TOKEN
+SLACK_TOKEN="$SLACK_TOKEN" coral source add slack || log "Slack source already added, skipping."
 
 # ── 3. Custom Langfuse source ─────────────────────────────────────────────────
 
@@ -54,11 +54,8 @@ log "Linting Langfuse source spec..."
 coral source lint ./sources/langfuse/manifest.yaml
 
 log "Adding Langfuse source..."
-require_env LANGFUSE_HOST LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
-LANGFUSE_BASE_URL="$LANGFUSE_HOST" \
-LANGFUSE_PUBLIC_KEY="$LANGFUSE_PUBLIC_KEY" \
-LANGFUSE_SECRET_KEY="$LANGFUSE_SECRET_KEY" \
-  coral source add --file ./sources/langfuse/manifest.yaml || log "Langfuse source already added, skipping."
+require_env LANGFUSE_BASE_URL LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
+coral source add --file ./sources/langfuse/manifest.yaml || log "Langfuse source already added, skipping."
 
 # ── 4. Summary ────────────────────────────────────────────────────────────────
 
