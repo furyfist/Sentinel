@@ -82,3 +82,28 @@ def get_incidents(limit: int = 20) -> list[dict]:
             "SELECT * FROM incident_reports ORDER BY detected_at DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+def save_file_risk(
+    file_path: str,
+    commit_sha: str,
+    cost_delta: float = 0.0,
+    error_delta: int = 0,
+    risk_score: float = 0.0,
+) -> int:
+    with get_connection() as conn:
+        cur = conn.execute(
+            """INSERT INTO file_risk_history (file_path, commit_sha, cost_delta, error_delta, risk_score)
+               VALUES (?, ?, ?, ?, ?)""",
+            (file_path, commit_sha, cost_delta, error_delta, risk_score),
+        )
+        return cur.lastrowid
+
+
+def get_file_risk_history(file_path: str) -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM file_risk_history WHERE file_path = ? ORDER BY change_date DESC",
+            (file_path,),
+        ).fetchall()
+        return [dict(r) for r in rows]
