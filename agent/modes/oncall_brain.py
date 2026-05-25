@@ -44,6 +44,27 @@ def run(dry_run: bool = False) -> None:
     print(f"        Spike detected={spike_detected}. Querying Sentry errors...")
     error_rows = query_library.error_cascade_detection()
 
+    # Step 3 — GitHub commits in last 48h
+    print("  [3/7] Fetching GitHub commits (last 48h)...")
+    commit_rows = query_library.commit_to_cost_blame()
+
+    # Step 4 — Slack context in the spike window
+    print("  [4/7] Fetching Slack incident context...")
+    spike_start = cost_rows[0]["hour"] if cost_rows else "2026-01-01T00:00:00Z"
+    slack_rows = query_library.slack_incident_context(
+        incident_start=str(spike_start),
+        incident_end="2099-12-31T23:59:59Z",
+    )
+
+    context = {
+        "cost": cost_rows[:5],
+        "errors": error_rows,
+        "commits": commit_rows[:10],
+        "slack": slack_rows,
+        "current_hourly_cost": current_hourly_cost,
+        "baseline_avg": baseline_avg,
+    }
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sentinel On-Call Brain — Mode A")
