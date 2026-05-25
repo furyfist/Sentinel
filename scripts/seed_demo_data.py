@@ -85,6 +85,15 @@ def seed_langfuse():
     if batch:
         _langfuse_ingest(batch)
 
+    print("  Seeding 24h window baseline (hours 3-22 ago, gpt-4o-mini) for spike contrast...")
+    batch = []
+    for hours_ago in range(3, 23):
+        for _ in range(3):
+            start = _utcnow() - timedelta(hours=hours_ago, minutes=random.randint(0, 55))
+            batch += _lf_trace_and_gen("normal-query", "user-baseline", "gpt-4o-mini",
+                                       start, start + timedelta(seconds=2), 100, 50)
+    _langfuse_ingest(batch)
+
     print("  Seeding 20 spike observations (last 45 minutes, gpt-4)...")
     batch = []
     spike_base = _utcnow() - timedelta(minutes=45)
