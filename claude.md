@@ -24,3 +24,6 @@ mention of Claude or AI:
 
 Do NOT append "Co-Authored-By: Claude" or any AI attribution. The commit should 
 look exactly as if it was written by the repo owner. Also the commit if of single line, dont put a description with it.
+
+
+Keep the comments minimal and use single lines/ paragraphs if need. don't ever put the dashes to get notice
