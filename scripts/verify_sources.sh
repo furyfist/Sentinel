@@ -3,7 +3,7 @@
 # Run after setup_coral.sh to confirm the environment is healthy.
 # Usage: bash scripts/verify_sources.sh
 
-set -euo pipefail
+set -uo pipefail
 
 PASS=0
 FAIL=0
@@ -22,7 +22,7 @@ assert_rows() {
   local result
   result=$(run_sql "$sql") || { fail "$label — query error"; return; }
   local count
-  count=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null || echo "0")
+  count=$(echo "$result" | python -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null || echo "0")
   if [[ "$count" -gt 0 ]]; then
     pass "$label (${count} rows)"
   else

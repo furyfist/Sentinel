@@ -670,14 +670,14 @@ jobs:
 ### 7.1 — Cost Spike Detection (Langfuse)
 ```sql
 SELECT
-  date_trunc('hour', startTime) as hour,
-  SUM(calculatedTotalCost) as hourly_cost,
+  date_trunc('hour', start_time) as hour,
+  SUM(total_cost) as hourly_cost,
   COUNT(*) as generation_count,
-  AVG(calculatedTotalCost) as avg_cost_per_call
+  AVG(total_cost) as avg_cost_per_call
 FROM langfuse.observations
 WHERE type = 'GENERATION'
-  AND startTime > NOW() - INTERVAL '24 hours'
-GROUP BY date_trunc('hour', startTime)
+  AND start_time > NOW() - INTERVAL '24 hours'
+GROUP BY date_trunc('hour', start_time)
 ORDER BY hour DESC
 ```
 
@@ -685,23 +685,23 @@ ORDER BY hour DESC
 ```sql
 SELECT
   g.sha,
-  g.message as commit_message,
+  g.commit__message as commit_message,
   g.author__login as author,
-  g.committed_date,
+  g.commit__author__date as committed_date,
   COUNT(DISTINCT s.id) as errors_after_commit,
-  SUM(l.calculatedTotalCost) as cost_after_commit
+  SUM(l.total_cost) as cost_after_commit
 FROM github.commits g
 LEFT JOIN sentry.issues s
-  ON s.first_seen > g.committed_date
-  AND s.first_seen < g.committed_date + INTERVAL '24 hours'
+  ON s.first_seen > g.commit__author__date
+  AND s.first_seen < g.commit__author__date + INTERVAL '24 hours'
 LEFT JOIN langfuse.observations l
-  ON l.startTime > g.committed_date
-  AND l.startTime < g.committed_date + INTERVAL '24 hours'
+  ON l.start_time > g.commit__author__date
+  AND l.start_time < g.commit__author__date + INTERVAL '24 hours'
   AND l.type = 'GENERATION'
 WHERE g.owner = '{owner}'
   AND g.repo = '{repo}'
-  AND g.committed_date > NOW() - INTERVAL '7 days'
-GROUP BY g.sha, g.message, g.author__login, g.committed_date
+  AND g.commit__author__date > NOW() - INTERVAL '7 days'
+GROUP BY g.sha, g.commit__message, g.author__login, g.commit__author__date
 ORDER BY cost_after_commit DESC NULLS LAST
 LIMIT 10
 ```
@@ -713,15 +713,15 @@ SELECT
   s.count as error_count,
   s.first_seen,
   s.last_seen,
-  SUM(l.calculatedTotalCost) as associated_cost,
+  SUM(l.total_cost) as associated_cost,
   COUNT(l.id) as retry_generations
 FROM sentry.issues s
 JOIN langfuse.observations l
-  ON l.startTime BETWEEN s.first_seen AND s.last_seen
+  ON l.start_time BETWEEN s.first_seen AND s.last_seen
   AND l.type = 'GENERATION'
 WHERE s.first_seen > NOW() - INTERVAL '48 hours'
 GROUP BY s.title, s.count, s.first_seen, s.last_seen
-HAVING SUM(l.calculatedTotalCost) > 1.0
+HAVING SUM(l.total_cost) > 1.0
 ORDER BY associated_cost DESC
 LIMIT 10
 ```
@@ -746,21 +746,21 @@ LIMIT 20
 ```sql
 SELECT
   g.sha,
-  g.message,
-  g.committed_date,
-  SUM(l.calculatedTotalCost) as cost_after,
+  g.commit__message as message,
+  g.commit__author__date as committed_date,
+  SUM(l.total_cost) as cost_after,
   COUNT(s.id) as errors_after
 FROM github.commits g
 LEFT JOIN langfuse.observations l
-  ON l.startTime BETWEEN g.committed_date AND g.committed_date + INTERVAL '24 hours'
+  ON l.start_time BETWEEN g.commit__author__date AND g.commit__author__date + INTERVAL '24 hours'
   AND l.type = 'GENERATION'
 LEFT JOIN sentry.issues s
-  ON s.first_seen BETWEEN g.committed_date AND g.committed_date + INTERVAL '24 hours'
+  ON s.first_seen BETWEEN g.commit__author__date AND g.commit__author__date + INTERVAL '24 hours'
 WHERE g.owner = '{owner}'
   AND g.repo = '{repo}'
-  AND g.committed_date > NOW() - INTERVAL '90 days'
-GROUP BY g.sha, g.message, g.committed_date
-ORDER BY g.committed_date DESC
+  AND g.commit__author__date > NOW() - INTERVAL '90 days'
+GROUP BY g.sha, g.commit__message, g.commit__author__date
+ORDER BY g.commit__author__date DESC
 ```
 
 ### 7.6 — Weekly Digest: What Shipped
@@ -783,15 +783,15 @@ ORDER BY p.merged_at DESC
 ### 7.7 — Agent Loop Detection (Langfuse)
 ```sql
 SELECT
-  traceId,
+  trace_id,
   COUNT(*) as generation_count,
-  MIN(startTime) as first_gen,
-  MAX(startTime) as last_gen,
-  SUM(calculatedTotalCost) as total_cost
+  MIN(start_time) as first_gen,
+  MAX(start_time) as last_gen,
+  SUM(total_cost) as total_cost
 FROM langfuse.observations
 WHERE type = 'GENERATION'
-  AND startTime > NOW() - INTERVAL '1 hour'
-GROUP BY traceId
+  AND start_time > NOW() - INTERVAL '1 hour'
+GROUP BY trace_id
 HAVING COUNT(*) > 10
 ORDER BY generation_count DESC
 LIMIT 10
