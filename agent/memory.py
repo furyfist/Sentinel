@@ -46,3 +46,39 @@ def init_db() -> None:
 
 
 init_db()
+
+
+def save_incident(
+    detection_type: str,
+    severity: str,
+    report_text: str,
+    related_commits: list = None,
+    related_errors: list = None,
+    cost_impact: float = 0.0,
+    slack_thread_ts: str = None,
+) -> int:
+    import json
+    with get_connection() as conn:
+        cur = conn.execute(
+            """INSERT INTO incident_reports
+               (detection_type, severity, report_text, related_commits, related_errors, cost_impact, slack_thread_ts)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                detection_type,
+                severity,
+                report_text,
+                json.dumps(related_commits or []),
+                json.dumps(related_errors or []),
+                cost_impact,
+                slack_thread_ts,
+            ),
+        )
+        return cur.lastrowid
+
+
+def get_incidents(limit: int = 20) -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM incident_reports ORDER BY detected_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
