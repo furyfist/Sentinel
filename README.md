@@ -102,3 +102,4 @@ sentinel/
 ├── scripts/               Setup, seeding, and runner scripts
 └── mcp/                   MCP config for Claude Code integration
 ```
+testing pr
