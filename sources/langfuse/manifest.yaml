@@ -479,6 +479,13 @@ tables:
       judges, or custom SDK calls. Use `data_type = 'NUMERIC'` for
       numeric scores and `data_type = 'CATEGORICAL'` for label-based
       scores. Filter by `trace_id` to see all scores for a specific trace.
+
+      NOTE: This table uses the v2 scores endpoint (/api/public/v2/scores).
+      Langfuse Cloud (all regions) supports v2. Self-hosted instances older
+      than ~mid-2024 may return 404 on this endpoint. If scores queries fail
+      with 404, change the path in this spec from /api/public/v2/scores to
+      /api/public/scores (the v1 endpoint). The column schema is identical
+      between v1 and v2 — only the path needs to change.
     filters:
       - name: trace_id
         required: false
