@@ -84,6 +84,24 @@ def get_incidents(limit: int = 20) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def save_cost_baseline(hourly_cost: float, daily_cost: float, source: str = "langfuse") -> int:
+    with get_connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO cost_baselines (hourly_cost, daily_cost, source) VALUES (?, ?, ?)",
+            (hourly_cost, daily_cost, source),
+        )
+        return cur.lastrowid
+
+
+def get_baselines(limit: int = 168) -> list[dict]:
+    """Returns last `limit` baseline rows (default 168 = 7 days of hourly samples)."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM cost_baselines ORDER BY recorded_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
 def save_file_risk(
     file_path: str,
     commit_sha: str,
