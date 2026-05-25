@@ -29,44 +29,71 @@ def clean_baselines():
     print("  Done.")
 
 
-def seed_langfuse():
-    from langfuse import Langfuse
-
-    lf = Langfuse(
-        public_key=LANGFUSE_PUBLIC_KEY,
-        secret_key=LANGFUSE_SECRET_KEY,
-        host=LANGFUSE_BASE_URL,
+def _langfuse_ingest(events: list) -> None:
+    import base64
+    auth = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+    resp = requests.post(
+        f"{LANGFUSE_BASE_URL}/api/public/ingestion",
+        json={"batch": events},
+        headers={"Authorization": f"Basic {auth}", "Content-Type": "application/json"},
+        timeout=30,
     )
+    if resp.status_code not in (200, 207):
+        raise RuntimeError(f"Langfuse ingestion failed ({resp.status_code}): {resp.text[:200]}")
 
+
+def _lf_trace_and_gen(trace_name, user_id, model, start, end, usage_in, usage_out) -> list:
+    import uuid
+    trace_id = str(uuid.uuid4())
+    gen_id = str(uuid.uuid4())
+    now = _utcnow().isoformat()
+    return [
+        {
+            "id": str(uuid.uuid4()),
+            "type": "trace-create",
+            "timestamp": now,
+            "body": {"id": trace_id, "name": trace_name, "userId": user_id,
+                     "timestamp": start.isoformat()},
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "type": "generation-create",
+            "timestamp": now,
+            "body": {
+                "id": gen_id,
+                "traceId": trace_id,
+                "name": "generation",
+                "model": model,
+                "startTime": start.isoformat(),
+                "endTime": end.isoformat(),
+                "usage": {"input": usage_in, "output": usage_out, "unit": "TOKENS"},
+            },
+        },
+    ]
+
+
+def seed_langfuse():
     print("  Seeding 100 baseline observations (last 7 days, gpt-4o-mini)...")
-    for i in range(100):
-        days_ago = random.randint(1, 7)
-        hours_ago = random.randint(0, 23)
-        start = _utcnow() - timedelta(days=days_ago, hours=hours_ago)
-        trace = lf.trace(name="normal-query", user_id="user-baseline")
-        trace.generation(
-            name="baseline-gen",
-            model="gpt-4o-mini",
-            start_time=start,
-            end_time=start + timedelta(seconds=2),
-            usage={"input": 100, "output": 50, "unit": "TOKENS"},
-        )
+    batch = []
+    for _ in range(100):
+        start = _utcnow() - timedelta(days=random.randint(1, 7), hours=random.randint(0, 23))
+        batch += _lf_trace_and_gen("normal-query", "user-baseline", "gpt-4o-mini",
+                                   start, start + timedelta(seconds=2), 100, 50)
+        if len(batch) >= 100:
+            _langfuse_ingest(batch)
+            batch = []
+    if batch:
+        _langfuse_ingest(batch)
 
     print("  Seeding 20 spike observations (last 45 minutes, gpt-4)...")
+    batch = []
     spike_base = _utcnow() - timedelta(minutes=45)
     for i in range(20):
         start = spike_base + timedelta(minutes=i * 2)
-        trace = lf.trace(name="runaway-agent", user_id="agent-loop-demo")
-        trace.generation(
-            name="spike-gen",
-            model="gpt-4",
-            start_time=start,
-            end_time=start + timedelta(seconds=8),
-            usage={"input": 5000, "output": 3000, "unit": "TOKENS"},
-        )
-
-    lf.flush()
-    print("  Langfuse seeding complete and flushed.")
+        batch += _lf_trace_and_gen("runaway-agent", "agent-loop-demo", "gpt-4",
+                                   start, start + timedelta(seconds=8), 5000, 3000)
+    _langfuse_ingest(batch)
+    print("  Langfuse seeding complete.")
 
 
 def seed_sentry():
