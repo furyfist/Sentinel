@@ -19,6 +19,7 @@ export default function IncidentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [incident, setIncident] = useState<IncidentReport | null>(null)
   const [commits, setCommits] = useState<CommitDetail[]>([])
+  const [commitsLoading, setCommitsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,7 +27,11 @@ export default function IncidentDetailPage() {
       .then((inc) => {
         setIncident(inc)
         if (inc.related_commits.length > 0) {
-          api.commits.get(inc.related_commits).then(setCommits).catch(() => {})
+          setCommitsLoading(true)
+          api.commits.get(inc.related_commits)
+            .then(setCommits)
+            .catch(() => {})
+            .finally(() => setCommitsLoading(false))
         }
       })
       .catch(() => {})
@@ -47,6 +52,8 @@ export default function IncidentDetailPage() {
 
   const badgeStyle = severityStyles[incident.severity ?? 'info'] ?? severityStyles.info
   const commitMap = Object.fromEntries(commits.map((c) => [c.sha, c]))
+
+  const githubBase = `https://github.com/furyfist/Sentinel/commit`
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
@@ -80,26 +87,34 @@ export default function IncidentDetailPage() {
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Related Commits</h3>
             <div className="space-y-2">
-              {incident.related_commits.map((sha) => {
-                const detail = commitMap[sha]
-                const url = detail?.url ?? `https://github.com/furyfist/Sentinel/commit/${sha}`
-                return (
-                  <a
-                    key={sha}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 px-3 py-2 rounded-lg transition-colors group"
-                  >
-                    <span className="font-mono text-xs text-indigo-600 shrink-0 mt-0.5 group-hover:text-indigo-700">
-                      {sha.slice(0, 7)}
-                    </span>
-                    <span className="text-xs text-slate-600 leading-relaxed truncate">
-                      {detail?.message ?? 'Loading…'}
-                    </span>
-                  </a>
-                )
-              })}
+              {commitsLoading
+                ? incident.related_commits.map((sha) => (
+                    <div key={sha} className="flex items-center gap-2.5 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
+                      <span className="font-mono text-xs text-indigo-400">{sha.slice(0, 7)}</span>
+                      <div className="h-3 flex-1 bg-slate-200 rounded animate-pulse" />
+                    </div>
+                  ))
+                : incident.related_commits.map((sha) => {
+                    const detail = commitMap[sha]
+                    const url = detail?.url ?? `${githubBase}/${sha}`
+                    return (
+                      <a
+                        key={sha}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 px-3 py-2 rounded-lg transition-colors group"
+                      >
+                        <span className="font-mono text-xs text-indigo-600 shrink-0 mt-0.5 group-hover:text-indigo-700">
+                          {sha.slice(0, 7)}
+                        </span>
+                        <span className="text-xs text-slate-600 leading-relaxed truncate">
+                          {detail?.message ?? sha.slice(0, 20)}
+                        </span>
+                      </a>
+                    )
+                  })
+              }
             </div>
           </div>
         )}
