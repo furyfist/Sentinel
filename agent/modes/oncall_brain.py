@@ -1,5 +1,5 @@
 import argparse
-from agent import query_library, memory
+from agent import query_library, memory, narrator
 from agent.anomaly_detector import detect_cost_spike
 
 
@@ -64,6 +64,13 @@ def run(dry_run: bool = False) -> None:
         "current_hourly_cost": current_hourly_cost,
         "baseline_avg": baseline_avg,
     }
+
+    # Step 5 — narrate
+    print("  [5/7] Narrating incident with Groq...")
+    report = narrator.narrate_incident(context, detection_type="cost_spike")
+    print("\n--- INCIDENT REPORT ---")
+    print(report)
+    print("--- END REPORT ---\n")
 
 
 if __name__ == "__main__":
