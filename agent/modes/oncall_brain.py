@@ -15,7 +15,7 @@ def _compute_baseline(cost_rows: list) -> float:
     return 0.0
 
 
-def run(dry_run: bool = False) -> None:
+def run(dry_run: bool = False, force: bool = False) -> None:
     print(f"Starting On-Call Brain (dry_run={dry_run})...")
 
     # Step 1 — fetch last 24h of hourly cost and compute baseline
@@ -37,8 +37,10 @@ def run(dry_run: bool = False) -> None:
     spike_detected = detect_cost_spike(current_hourly_cost, baseline_avg)
 
     if not spike_detected and baseline_avg > 0:
-        print("        No anomaly detected. Exiting.")
-        return
+        if not dry_run and not force:
+            print("        No anomaly detected. Exiting.")
+            return
+        print("        No spike (continuing anyway — dry-run or --force active)")
 
     if baseline_avg == 0:
         print("        No baseline yet — running full pipeline to seed data.")
@@ -116,5 +118,6 @@ def run(dry_run: bool = False) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sentinel On-Call Brain — Mode A")
     parser.add_argument("--dry-run", action="store_true", help="Skip Slack post and GitHub issue creation")
+    parser.add_argument("--force", action="store_true", help="Run full pipeline even if no spike detected")
     args = parser.parse_args()
-    run(dry_run=args.dry_run)
+    run(dry_run=args.dry_run, force=args.force)
