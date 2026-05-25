@@ -1,5 +1,6 @@
 import argparse
 from agent import query_library, memory
+from agent.anomaly_detector import detect_cost_spike
 
 
 def _compute_baseline(cost_rows: list) -> float:
@@ -28,6 +29,20 @@ def run(dry_run: bool = False) -> None:
             hourly_cost=row["hourly_cost"] or 0.0,
             daily_cost=0.0,
         )
+
+    # Step 2 — detect spike; pull Sentry errors if triggered
+    print("  [2/7] Checking for cost spike...")
+    spike_detected = detect_cost_spike(current_hourly_cost, baseline_avg)
+
+    if not spike_detected and baseline_avg > 0:
+        print("        No anomaly detected. Exiting.")
+        return
+
+    if baseline_avg == 0:
+        print("        No baseline yet — running full pipeline to seed data.")
+
+    print(f"        Spike detected={spike_detected}. Querying Sentry errors...")
+    error_rows = query_library.error_cascade_detection()
 
 
 if __name__ == "__main__":
