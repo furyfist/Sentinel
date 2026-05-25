@@ -37,12 +37,12 @@ require_env GITHUB_TOKEN
 GITHUB_TOKEN="$GITHUB_TOKEN" coral source add github || log "GitHub source already added, skipping."
 
 log "Adding Sentry source..."
-require_env SENTRY_AUTH_TOKEN
-SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" coral source add sentry || log "Sentry source already added, skipping."
+require_env SENTRY_TOKEN SENTRY_ORG
+SENTRY_TOKEN="$SENTRY_TOKEN" SENTRY_ORG="$SENTRY_ORG" coral source add sentry || log "Sentry source already added, skipping."
 
 log "Adding Datadog source..."
-require_env DD_API_KEY DD_APP_KEY
-DD_API_KEY="$DD_API_KEY" DD_APP_KEY="$DD_APP_KEY" coral source add datadog || log "Datadog source already added, skipping."
+require_env DD_API_KEY DD_APPLICATION_KEY
+DD_API_KEY="$DD_API_KEY" DD_APPLICATION_KEY="$DD_APPLICATION_KEY" coral source add datadog || log "Datadog source already added, skipping."
 
 log "Adding Slack source..."
 require_env SLACK_BOT_TOKEN
