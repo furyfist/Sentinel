@@ -45,3 +45,10 @@ export interface CurrentRisk {
   files_changed: string[]
   file_count: number
 }
+
+export interface CommitDetail {
+  sha: string
+  message: string | null
+  author: string | null
+  url: string
+}

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import incidents, risk, digest, settings
+from api.routes import incidents, risk, digest, settings, commits
 from agent import coral_client
 
 app = FastAPI(title="Sentinel API", version="1.0.0")
@@ -17,6 +17,7 @@ app.include_router(incidents.router, prefix="/api")
 app.include_router(risk.router, prefix="/api")
 app.include_router(digest.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
+app.include_router(commits.router, prefix="/api")
 
 
 @app.get("/api/health")

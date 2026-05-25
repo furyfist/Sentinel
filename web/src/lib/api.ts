@@ -1,4 +1,4 @@
-import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk } from '@/types'
+import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
@@ -39,5 +39,9 @@ export const api = {
   settings: {
     get: () => get<Settings>('/settings'),
     update: (data: Settings) => put<Settings>('/settings', data),
+  },
+
+  commits: {
+    get: (shas: string[]) => get<CommitDetail[]>(`/commits?shas=${shas.join(',')}`),
   },
 }

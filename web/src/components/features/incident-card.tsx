@@ -16,11 +16,24 @@ const severityStyles: Record<string, string> = {
   low:    'bg-slate-50 text-slate-600 border-slate-200',
 }
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^[-*]\s+/gm, '')
+    .replace(/\n+/g, ' ')
+    .trim()
+}
+
 export function IncidentCard({ incident, index = 0 }: IncidentCardProps) {
   const severity = incident.severity ?? 'info'
   const badgeStyle = severityStyles[severity] ?? severityStyles.info
   const date = new Date(incident.detected_at).toLocaleString()
-  const preview = incident.report_text?.slice(0, 120).replace(/\n/g, ' ') ?? '—'
+  const preview = incident.report_text
+    ? stripMarkdown(incident.report_text).slice(0, 140)
+    : '—'
 
   return (
     <motion.div

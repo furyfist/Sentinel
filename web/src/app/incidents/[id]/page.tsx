@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import { api } from '@/lib/api'
-import type { IncidentReport } from '@/types'
+import type { CommitDetail, IncidentReport } from '@/types'
 
 const severityStyles: Record<string, string> = {
   high:   'bg-red-50 text-red-600 border-red-200',
@@ -18,10 +18,19 @@ const severityStyles: Record<string, string> = {
 export default function IncidentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [incident, setIncident] = useState<IncidentReport | null>(null)
+  const [commits, setCommits] = useState<CommitDetail[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.incidents.get(Number(id)).then(setIncident).catch(() => {}).finally(() => setLoading(false))
+    api.incidents.get(Number(id))
+      .then((inc) => {
+        setIncident(inc)
+        if (inc.related_commits.length > 0) {
+          api.commits.get(inc.related_commits).then(setCommits).catch(() => {})
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [id])
 
   if (loading) {
@@ -37,6 +46,7 @@ export default function IncidentDetailPage() {
   }
 
   const badgeStyle = severityStyles[incident.severity ?? 'info'] ?? severityStyles.info
+  const commitMap = Object.fromEntries(commits.map((c) => [c.sha, c]))
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
@@ -61,7 +71,7 @@ export default function IncidentDetailPage() {
           [&>h1]:text-base [&>h1]:font-semibold [&>h1]:text-slate-800 [&>h1]:mb-2
           [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:text-slate-700 [&>h2]:mb-1.5
           [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:text-slate-700 [&>h3]:mb-1">
-          <ReactMarkdown>{incident.report_text}</ReactMarkdown>
+          <ReactMarkdown>{incident.report_text ?? ''}</ReactMarkdown>
         </div>
       </div>
 
@@ -69,10 +79,27 @@ export default function IncidentDetailPage() {
         {incident.related_commits.length > 0 && (
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Related Commits</h3>
-            <div className="space-y-1.5">
-              {incident.related_commits.map((sha) => (
-                <span key={sha} className="block font-mono text-xs bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-100">{sha.slice(0, 12)}</span>
-              ))}
+            <div className="space-y-2">
+              {incident.related_commits.map((sha) => {
+                const detail = commitMap[sha]
+                const url = detail?.url ?? `https://github.com/furyfist/Sentinel/commit/${sha}`
+                return (
+                  <a
+                    key={sha}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 px-3 py-2 rounded-lg transition-colors group"
+                  >
+                    <span className="font-mono text-xs text-indigo-600 shrink-0 mt-0.5 group-hover:text-indigo-700">
+                      {sha.slice(0, 7)}
+                    </span>
+                    <span className="text-xs text-slate-600 leading-relaxed truncate">
+                      {detail?.message ?? 'Loading…'}
+                    </span>
+                  </a>
+                )
+              })}
             </div>
           </div>
         )}
