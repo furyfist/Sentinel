@@ -6,3 +6,6 @@ __pycache__/
 *.pyc
 *.pyo
 sentinel.db
+settings.json
+.next/
+node_modules/

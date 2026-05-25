@@ -1,0 +1,6 @@
+{
+  "cost_spike_multiplier": 2.5,
+  "pr_risk_threshold": 70,
+  "agent_loop_generation_threshold": 10,
+  "error_cascade_threshold": 10.0
+}
