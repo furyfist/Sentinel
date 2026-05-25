@@ -34,19 +34,19 @@ fi
 
 log "Adding GitHub source..."
 require_env GITHUB_TOKEN
-GITHUB_TOKEN="$GITHUB_TOKEN" coral source add github --yes || log "GitHub source already added, skipping."
+GITHUB_TOKEN="$GITHUB_TOKEN" coral source add github || log "GitHub source already added, skipping."
 
 log "Adding Sentry source..."
 require_env SENTRY_AUTH_TOKEN
-SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" coral source add sentry --yes || log "Sentry source already added, skipping."
+SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" coral source add sentry || log "Sentry source already added, skipping."
 
 log "Adding Datadog source..."
 require_env DD_API_KEY DD_APP_KEY
-DD_API_KEY="$DD_API_KEY" DD_APP_KEY="$DD_APP_KEY" coral source add datadog --yes || log "Datadog source already added, skipping."
+DD_API_KEY="$DD_API_KEY" DD_APP_KEY="$DD_APP_KEY" coral source add datadog || log "Datadog source already added, skipping."
 
 log "Adding Slack source..."
 require_env SLACK_BOT_TOKEN
-SLACK_BOT_TOKEN="$SLACK_BOT_TOKEN" coral source add slack --yes || log "Slack source already added, skipping."
+SLACK_BOT_TOKEN="$SLACK_BOT_TOKEN" coral source add slack || log "Slack source already added, skipping."
 
 # ── 3. Custom Langfuse source ─────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ require_env LANGFUSE_HOST LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
 LANGFUSE_BASE_URL="$LANGFUSE_HOST" \
 LANGFUSE_PUBLIC_KEY="$LANGFUSE_PUBLIC_KEY" \
 LANGFUSE_SECRET_KEY="$LANGFUSE_SECRET_KEY" \
-  coral source add --file ./sources/langfuse/manifest.yaml --yes || log "Langfuse source already added, skipping."
+  coral source add --file ./sources/langfuse/manifest.yaml || log "Langfuse source already added, skipping."
 
 # ── 4. Summary ────────────────────────────────────────────────────────────────
 
