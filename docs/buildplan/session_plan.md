@@ -117,28 +117,28 @@ requirements.txt                     (anthropic, requests, python-dotenv, langfu
 
 ---
 
-## Session 4 — Claude Integration + Persistence
+## Session 4 — Groq Narrator + Persistence
 **Duration estimate:** ~2 hours  
-**Build plan refs:** §2.4 (claude_narrator), §2.5 (memory/SQLite)
+**Build plan refs:** §2.4 (claude_narrator → now groq_narrator), §2.5 (memory/SQLite)
 
 ### Start state
 Session 3 exit criteria all green.
 
 ### What to do
-1. Write `agent/claude_narrator.py` from §2.4. Three narration functions: `narrate_incident`, `narrate_pr_risk`, `narrate_weekly_digest`. Use prompt caching (add `cache_control` to the system prompt). Use model `claude-sonnet-4-6`.
+1. Write `agent/narrator.py` from §2.4. Three narration functions: `narrate_incident`, `narrate_pr_risk`, `narrate_weekly_digest`. Uses Groq SDK (`pip install groq`). Model: `llama-3.3-70b-versatile` (set via `GROQ_MODEL` env var). Groq SDK is OpenAI-compatible — `client.chat.completions.create(...)`.
 2. Write `agent/memory.py` from §2.5. Three tables: `file_risk_history`, `incident_reports`, `cost_baselines`. Write helper functions: `save_incident`, `get_file_risk_history`, `save_cost_baseline`, `get_baselines`.
-3. Write a `scripts/test_narrator.py` — sends a small hardcoded SQL result dict to Claude, prints the narration. Verifies API key works and prompt format is correct.
-4. Update `requirements.txt` with any new deps.
+3. Write a `scripts/test_narrator.py` — sends a small hardcoded SQL result dict to Groq, prints the narration. Verifies GROQ_API_KEY works and prompt format is correct.
+4. Update `requirements.txt` with any new deps (groq, not anthropic).
 
 ### Files produced
 ```
-agent/claude_narrator.py
+agent/narrator.py
 agent/memory.py
 scripts/test_narrator.py
 ```
 
 ### Exit criteria
-- [ ] `python scripts/test_narrator.py` returns a coherent English incident report from Claude
+- [ ] `python scripts/test_narrator.py` returns a coherent English incident report from Groq
 - [ ] `memory.py` creates `sentinel.db` SQLite file with all 3 tables on first import
 - [ ] `save_incident(...)` + `get_incidents()` round-trip returns the saved row
 

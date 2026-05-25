@@ -438,21 +438,32 @@ def detect_agent_loop(generation_count: int, time_window_seconds: int = 60, thre
 
 Takes SQL result rows + detection metadata. Returns plain English report.
 
+Uses Groq API (llama-3.3-70b-versatile). Groq SDK is OpenAI-compatible — same
+interface, just different client import and model name. Set GROQ_API_KEY and
+optionally GROQ_MODEL in .env.
+
 ```python
-import anthropic
+from groq import Groq
+import os, json
 
 def narrate_incident(sql_results: dict, detection_type: str) -> str:
-    client = anthropic.Anthropic()
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    model = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+    response = client.chat.completions.create(
+        model=model,
         max_tokens=1000,
-        system="You are Sentinel, an engineering observability agent. Write a concise incident report from the data provided. Be specific about commits, errors, costs, and timelines. No fluff.",
-        messages=[{
-            "role": "user",
-            "content": f"Detection type: {detection_type}\nData:\n{json.dumps(sql_results, indent=2)}\n\nWrite the incident report."
-        }]
+        messages=[
+            {
+                "role": "system",
+                "content": "You are Sentinel, an engineering observability agent. Write a concise incident report from the data provided. Be specific about commits, errors, costs, and timelines. No fluff."
+            },
+            {
+                "role": "user",
+                "content": f"Detection type: {detection_type}\nData:\n{json.dumps(sql_results, indent=2)}\n\nWrite the incident report."
+            }
+        ]
     )
-    return message.content[0].text
+    return response.choices[0].message.content
 ```
 
 **Step 2.5 — memory.py (SQLite)**
