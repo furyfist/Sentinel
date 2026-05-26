@@ -1,4 +1,4 @@
-import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection, TraceGraph, WorstTrace, ApprovalItem, ApprovalStats } from '@/types'
+import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection, TraceGraph, WorstTrace, ApprovalItem, ApprovalStats, SamplingStats } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
@@ -55,6 +55,11 @@ export const api = {
     traceGraph: (traceId: string) => get<TraceGraph>(`/forensics/trace/${traceId}`),
     incidentGraph: (start: string, end: string) => get<TraceGraph>(`/forensics/incident?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
     worstTraces: (limit = 10) => get<WorstTrace[]>(`/forensics/worst-traces?limit=${limit}`),
+  },
+
+  sampling: {
+    stats: () => get<SamplingStats>('/sampling/stats'),
+    policy: () => get<Record<string, number>>('/sampling/policy'),
   },
 
   approvals: {

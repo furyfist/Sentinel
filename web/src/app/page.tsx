@@ -6,13 +6,14 @@ import { api } from '@/lib/api'
 import { StatCard } from '@/components/features/stat-card'
 import { IncidentCard } from '@/components/features/incident-card'
 import { DigestSection } from '@/components/features/digest-section'
-import type { IncidentReport, DigestEntry, HealthStatus, LoopDetection } from '@/types'
+import type { IncidentReport, DigestEntry, HealthStatus, LoopDetection, SamplingStats } from '@/types'
 
 export default function DashboardPage() {
   const [incidents, setIncidents] = useState<IncidentReport[]>([])
   const [digest, setDigest] = useState<DigestEntry | null>(null)
   const [health, setHealth] = useState<HealthStatus | null>(null)
   const [activeLoops, setActiveLoops] = useState<LoopDetection[]>([])
+  const [sampling, setSampling] = useState<SamplingStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function DashboardPage() {
       api.digest.latest().then(setDigest).catch(() => {}),
       api.health().then(setHealth),
       api.loops.active().then(setActiveLoops).catch(() => {}),
+      api.sampling.stats().then(setSampling).catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -64,6 +66,51 @@ export default function DashboardPage() {
           delay={0.2}
         />
       </div>
+
+      {!loading && sampling && sampling.total_traces > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.22 }}
+          className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Sampling Efficiency</h2>
+            <span className="text-xs text-slate-400">last run</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-end gap-1.5 mb-1">
+                <span className="text-2xl font-bold text-slate-900">{sampling.sampled_traces}</span>
+                <span className="text-sm text-slate-400 pb-0.5">of {sampling.total_traces} traces analyzed</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-1.5">
+                <div
+                  className="bg-indigo-500 h-1.5 rounded-full"
+                  style={{ width: `${Math.round((sampling.sampled_traces / sampling.total_traces) * 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {Math.round((sampling.dropped_traces / sampling.total_traces) * 100)}% noise dropped
+              </p>
+            </div>
+            <div className="flex flex-col gap-1 shrink-0 text-xs text-slate-500">
+              {sampling.keep_reasons.has_error != null && sampling.keep_reasons.has_error > 0 && (
+                <span>{sampling.keep_reasons.has_error} errors</span>
+              )}
+              {sampling.keep_reasons.cost_spike != null && sampling.keep_reasons.cost_spike > 0 && (
+                <span>{sampling.keep_reasons.cost_spike} cost spikes</span>
+              )}
+              {sampling.keep_reasons.novel_pattern != null && sampling.keep_reasons.novel_pattern > 0 && (
+                <span>{sampling.keep_reasons.novel_pattern} novel patterns</span>
+              )}
+              {sampling.keep_reasons.high_gen != null && sampling.keep_reasons.high_gen > 0 && (
+                <span>{sampling.keep_reasons.high_gen} high-gen</span>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {loopCount > 0 && !loading && (
         <motion.div

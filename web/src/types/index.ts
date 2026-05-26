@@ -118,3 +118,17 @@ export interface ApprovalStats {
   expired: number
   avg_resolution_minutes: number | null
 }
+
+export interface SamplingStats {
+  total_traces: number
+  sampled_traces: number
+  dropped_traces: number
+  keep_reasons: {
+    has_error?: number
+    cost_spike?: number
+    schema_failed?: number
+    novel_pattern?: number
+    high_gen?: number
+  }
+  recorded_at: string | null
+}
