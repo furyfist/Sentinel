@@ -85,8 +85,37 @@ class AnomalyDetector:
         return None
 
     def detect_silent_tool_failure(self) -> AnomalyResult | None:
-        """Stub — implemented fully in tool_failure_detector.py (Phase 4)."""
-        return None
+        """Detect silent tool call failures via ToolFailureDetector."""
+        if not self.coral:
+            return None
+        from agent.detectors.tool_failure_detector import ToolFailureDetector
+        detector = ToolFailureDetector(self.coral, self.memory, self.config)
+        failures = detector.run(hours=6)
+        if not failures:
+            return None
+
+        worst = failures[0]
+        strategy = worst.get("strategy", "unknown")
+        tool = worst.get("tool_name", "unknown")
+        trace_id = worst.get("trace_id", "")
+
+        strategy_labels = {
+            "schema_failure": "JSON schema mismatch",
+            "sentry_correlation": f"Sentry error: {worst.get('sentry_error', '')[:50]}",
+            "output_anomaly": f"output {worst.get('output_len', 0)}B vs {worst.get('avg_output_len', 0):.0f}B avg",
+        }
+        detail = strategy_labels.get(strategy, strategy)
+        description = f"Silent tool failure: '{tool}' on trace {trace_id[:12]} — {detail}"
+
+        return AnomalyResult(
+            type="tool_failure",
+            severity="high",
+            detected_at=datetime.utcnow(),
+            description=description,
+            metadata={"failures": failures[:5], "total": len(failures)},
+            requires_approval=True,
+            suggested_action="create_issue",
+        )
 
     def detect_cost_spike(self) -> AnomalyResult | None:
         """Detect when current hourly cost exceeds the rolling baseline."""
