@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { StatCard } from '@/components/features/stat-card'
 import { IncidentCard } from '@/components/features/incident-card'
 import { DigestSection } from '@/components/features/digest-section'
+import Link from 'next/link'
 import type { IncidentReport, DigestEntry, HealthStatus, LoopDetection, SamplingStats } from '@/types'
 
 export default function DashboardPage() {
@@ -14,6 +15,8 @@ export default function DashboardPage() {
   const [health, setHealth] = useState<HealthStatus | null>(null)
   const [activeLoops, setActiveLoops] = useState<LoopDetection[]>([])
   const [sampling, setSampling] = useState<SamplingStats | null>(null)
+  const [pendingApprovals, setPendingApprovals] = useState<number>(0)
+  const [hasDrift, setHasDrift] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,6 +26,8 @@ export default function DashboardPage() {
       api.health().then(setHealth),
       api.loops.active().then(setActiveLoops).catch(() => {}),
       api.sampling.stats().then(setSampling).catch(() => {}),
+      api.approvals.stats().then(s => setPendingApprovals(s.pending ?? 0)).catch(() => {}),
+      api.quality.drift().then(d => setHasDrift(d.length > 0)).catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -30,6 +35,7 @@ export default function DashboardPage() {
   const highCount = incidents.filter((i) => i.severity === 'high').length
   const loopCount = activeLoops.length
   const worstLoop = activeLoops[0] ?? null
+  const projectedCost = totalCost > 0 ? (totalCost / incidents.length) * 6 : 0
 
   return (
     <div className="space-y-8">
@@ -54,16 +60,34 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Incidents" value={loading ? '—' : incidents.length} delay={0.05} />
-        <StatCard label="Peak Cost / hr" value={loading ? '—' : `$${totalCost.toFixed(2)}`} accent="red" delay={0.1} />
-        <StatCard label="High Severity" value={loading ? '—' : highCount} accent={highCount > 0 ? 'red' : 'green'} delay={0.15} />
+      <div className="grid grid-cols-5 gap-4">
+        <Link href="/incidents">
+          <StatCard label="Total Incidents" value={loading ? '—' : incidents.length} delay={0.05} />
+        </Link>
+        <StatCard label="Projected 6h Cost" value={loading ? '—' : `$${projectedCost.toFixed(2)}`} accent={projectedCost > 5 ? 'red' : 'green'} delay={0.1} />
+        <Link href="/forensics">
+          <StatCard
+            label="Active Loops"
+            value={loading ? '—' : loopCount}
+            accent={loopCount > 0 ? 'red' : 'green'}
+            sub={worstLoop ? `${worstLoop.trace_id.slice(0, 8)} · $${(worstLoop.cost_burned ?? 0).toFixed(4)}` : undefined}
+            delay={0.15}
+          />
+        </Link>
+        <Link href="/approvals">
+          <StatCard
+            label="Pending Approvals"
+            value={loading ? '—' : pendingApprovals}
+            accent={pendingApprovals > 0 ? 'red' : 'green'}
+            delay={0.2}
+          />
+        </Link>
         <StatCard
-          label="Active Loops"
-          value={loading ? '—' : loopCount}
-          accent={loopCount > 0 ? 'red' : 'green'}
-          sub={worstLoop ? `${worstLoop.trace_id.slice(0, 8)} · $${(worstLoop.cost_burned ?? 0).toFixed(4)}` : undefined}
-          delay={0.2}
+          label="Drift Status"
+          value={loading ? '—' : hasDrift ? 'Drift' : 'Clean'}
+          accent={hasDrift ? 'red' : 'green'}
+          sub={hasDrift ? 'schema mismatch detected' : 'all features healthy'}
+          delay={0.25}
         />
       </div>
 

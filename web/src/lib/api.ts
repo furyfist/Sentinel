@@ -57,6 +57,11 @@ export const api = {
     worstTraces: (limit = 10) => get<WorstTrace[]>(`/forensics/worst-traces?limit=${limit}`),
   },
 
+  quality: {
+    drift: () => get<Record<string, unknown>[]>('/quality/drift'),
+    snapshots: () => get<Record<string, unknown>[]>('/quality/snapshots'),
+  },
+
   sampling: {
     stats: () => get<SamplingStats>('/sampling/stats'),
     policy: () => get<Record<string, number>>('/sampling/policy'),
