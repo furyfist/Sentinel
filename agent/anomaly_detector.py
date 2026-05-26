@@ -47,7 +47,41 @@ class AnomalyDetector:
         )
 
     def detect_prompt_drift(self) -> AnomalyResult | None:
-        """Stub — implemented fully in drift_detector.py (Phase 3)."""
+        """Scan all recent features for schema drift using DriftDetector."""
+        if not self.coral or not self.memory:
+            return None
+        from agent.detectors.drift_detector import DriftDetector
+        detector = DriftDetector(self.coral, self.memory, self.config)
+        features = detector.get_recent_feature_names(hours=24)
+        for feature in features:
+            event = detector.detect(feature)
+            if event:
+                severity = event.get("severity", "medium")
+                blame = event.get("blame_commit_message", "")
+                description = (
+                    f"Prompt drift on '{feature}': {event['drift_type']} "
+                    f"({event['validation_fail_rate']:.0%} fail rate)"
+                    + (f" — blame: {blame[:60]}" if blame else "")
+                )
+                if self.memory:
+                    self.memory.save_drift_event(
+                        feature_name=feature,
+                        drift_type=event["drift_type"],
+                        severity=severity,
+                        validation_fail_rate=event["validation_fail_rate"],
+                        details=event["details"],
+                        blame_commit_sha=event.get("blame_commit_sha"),
+                        blame_commit_message=event.get("blame_commit_message"),
+                    )
+                return AnomalyResult(
+                    type="drift_detected",
+                    severity=severity,
+                    detected_at=datetime.utcnow(),
+                    description=description,
+                    metadata=event,
+                    requires_approval=True,
+                    suggested_action="create_issue",
+                )
         return None
 
     def detect_silent_tool_failure(self) -> AnomalyResult | None:
