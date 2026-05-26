@@ -108,6 +108,84 @@ class DriftDetector:
 
         return consensus
 
+    def _validate_against_schema(self, output: str, snapshot: dict) -> bool:
+        """
+        Returns True if the output conforms to the stored schema.
+        For JSON outputs: checks that all expected top-level keys are present.
+        For text outputs: passes if non-empty.
+        """
+        if not output:
+            return False
+
+        if snapshot.get("_type") == "text":
+            return len(output.strip()) > 0
+
+        try:
+            parsed = json.loads(output)
+        except (json.JSONDecodeError, TypeError):
+            return False
+
+        if not isinstance(parsed, dict):
+            return True
+
+        expected_keys = {k for k in snapshot.keys() if not k.startswith("_")}
+        actual_keys = set(parsed.keys())
+        return expected_keys.issubset(actual_keys)
+
+    def _describe_mismatch(self, output: str, snapshot: dict) -> str:
+        """Human-readable description of what's wrong with this output."""
+        try:
+            parsed = json.loads(output)
+            expected = {k for k in snapshot.keys() if not k.startswith("_")}
+            actual = set(parsed.keys()) if isinstance(parsed, dict) else set()
+            missing = expected - actual
+            extra = actual - expected
+            parts = []
+            if missing:
+                parts.append(f"missing keys: {sorted(missing)}")
+            if extra:
+                parts.append(f"extra keys: {sorted(extra)}")
+            return "; ".join(parts) or "structure mismatch"
+        except Exception:
+            return "not valid JSON"
+
+    def validate_observations(self, feature_name: str, observations: list[dict]) -> dict:
+        """
+        Validate each observation's output against the stored schema snapshot.
+        Returns summary with total, passed, failed, fail_rate, and failures list.
+        """
+        if not self.memory:
+            return {"status": "no_memory"}
+
+        snapshot_row = self.memory.get_schema_snapshot(feature_name)
+        if not snapshot_row:
+            return {"status": "no_snapshot", "feature": feature_name}
+
+        snapshot = snapshot_row["schema_json"]
+        passed, failed, failures = 0, 0, []
+
+        for obs in observations:
+            output = obs.get("output", "") or ""
+            if self._validate_against_schema(output, snapshot):
+                passed += 1
+            else:
+                failed += 1
+                failures.append({
+                    "observation_id": obs.get("id", ""),
+                    "trace_id": obs.get("trace_id", ""),
+                    "mismatch": self._describe_mismatch(output, snapshot),
+                })
+
+        total = passed + failed
+        return {
+            "feature": feature_name,
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "fail_rate": round(failed / total, 4) if total else 0.0,
+            "failures": failures[:10],
+        }
+
     def check_score_regression(self, feature_name: str) -> dict | None:
         """
         Strategy B: compare last-24h avg score vs 7-day baseline.
