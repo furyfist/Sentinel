@@ -11,10 +11,10 @@ export function GenerationNode({ data }: { data: Record<string, unknown> }) {
         {isError ? 'error' : 'generation'}
       </div>
       <div className="font-semibold">{data.label as string}</div>
-      {data.model && <div className="text-[10px] opacity-60 mt-0.5">{data.model as string}</div>}
+      {!!data.model && <div className="text-[10px] opacity-60 mt-0.5">{String(data.model)}</div>}
       <div className="flex gap-2 mt-1 text-[10px] opacity-70">
-        {(data.cost as number) > 0 && <span>${(data.cost as number).toFixed(4)}</span>}
-        {(data.tokens as number) > 0 && <span>{data.tokens as number}t</span>}
+        {Number(data.cost ?? 0) > 0 && <span>${Number(data.cost).toFixed(4)}</span>}
+        {Number(data.tokens ?? 0) > 0 && <span>{Number(data.tokens)}t</span>}
       </div>
       <Handle type="source" position={Position.Bottom} className={isError ? '!bg-red-400' : '!bg-violet-400'} />
     </div>

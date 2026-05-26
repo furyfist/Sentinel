@@ -212,6 +212,70 @@ Expected: dict with sha + message, or None if no matching commits
 
 ---
 
+## Phase 4 — Silent Tool Failures + Forensics Graph
+
+### 21. Tool failure detector (requires Coral + Langfuse/Sentry data)
+```bash
+.\venv\Scripts\python -c "
+from agent import coral_client, memory
+from agent.detectors.tool_failure_detector import ToolFailureDetector
+d = ToolFailureDetector(coral_client, memory)
+failures = d.run(hours=6)
+print('Failures found:', len(failures))
+for f in failures[:3]:
+    print(' ', f['strategy'], f['tool_name'], f['trace_id'][:12])
+"
+Expected: list of dicts (may be empty if no real data; runs without errors)
+```
+
+### 22. Trace reconstructor API
+```
+GET http://localhost:8000/api/forensics/worst-traces
+Expected: JSON array of worst traces by cost
+
+GET http://localhost:8000/api/forensics/trace/<trace_id>
+Expected: { nodes: [...], edges: [...], metadata: {...} }
+```
+
+### 23. Incident graph API
+```
+GET http://localhost:8000/api/forensics/incident?start=2026-05-20T00:00:00Z&end=2026-05-27T23:59:59Z
+Expected: { nodes: [...], edges: [...], metadata: { commits, errors, traces, messages } }
+```
+
+### 24. Forensics page loads
+```
+Open http://localhost:3000/forensics
+Expected:
+- Sidebar shows worst traces (or "No traces found" if Langfuse is empty)
+- Click a trace → React Flow canvas renders nodes
+- "View Incident Graph" button → loads cross-source graph
+- Node colors: indigo=commit, red=error, amber=trace, teal=slack, violet=generation
+```
+
+### 25. Dependency graph tab on incident detail
+```
+Open http://localhost:3000/incidents/<id>
+Expected:
+- Two tabs: "Report" | "Dependency Graph"
+- Click "Dependency Graph" → loads incident graph for ±2h window
+- React Flow canvas with MiniMap and Controls
+```
+
+### 26. Nav updated
+```
+Open http://localhost:3000
+Expected: Nav shows Dashboard, Incidents, Forensics, Risk, Digest, Settings
+```
+
+### 27. TypeScript compiles clean
+```bash
+cd web && npx tsc --noEmit
+Expected: no output (exit code 0)
+```
+
+---
+
 ## General Checks
 
 ### API routes all respond

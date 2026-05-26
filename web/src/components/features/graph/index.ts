@@ -1,9 +1,11 @@
-export { CommitNode } from './commit-node'
-export { ErrorNode } from './error-node'
-export { TraceNode } from './trace-node'
-export { MessageNode } from './message-node'
-export { GenerationNode } from './generation-node'
-export { SpanNode } from './span-node'
+import { CommitNode } from './commit-node'
+import { ErrorNode } from './error-node'
+import { TraceNode } from './trace-node'
+import { MessageNode } from './message-node'
+import { GenerationNode } from './generation-node'
+import { SpanNode } from './span-node'
+
+export { CommitNode, ErrorNode, TraceNode, MessageNode, GenerationNode, SpanNode }
 
 export const NODE_TYPES = {
   commit: CommitNode,
