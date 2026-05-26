@@ -186,6 +186,91 @@ class DriftDetector:
             "failures": failures[:10],
         }
 
+    def blame_commit(
+        self,
+        drift_start: str,
+        owner: str = GITHUB_OWNER,
+        repo: str = GITHUB_REPO,
+    ) -> dict | None:
+        """
+        Find the most recent commit that touched prompt-related files
+        in the 48 hours before the drift was first detected.
+        Returns the closest commit dict, or None if none found.
+        """
+        if not self.coral:
+            return None
+        safe_start = str(drift_start).replace("'", "")
+        sql = f"""
+            SELECT
+                sha,
+                commit__message as message,
+                author__login as author,
+                commit__author__date as committed_date
+            FROM github.commits
+            WHERE owner = '{owner}'
+                AND repo = '{repo}'
+                AND CAST(commit__author__date AS TIMESTAMP) BETWEEN
+                    CAST('{safe_start}' AS TIMESTAMP) - INTERVAL '48 hours'
+                    AND CAST('{safe_start}' AS TIMESTAMP)
+                AND (
+                    commit__message ILIKE '%prompt%'
+                    OR commit__message ILIKE '%system%'
+                    OR commit__message ILIKE '%template%'
+                    OR commit__message ILIKE '%llm%'
+                    OR commit__message ILIKE '%model%'
+                )
+            ORDER BY commit__author__date DESC
+            LIMIT 5
+        """
+        try:
+            rows = self.coral.query(sql)
+            return rows[0] if rows else None
+        except Exception as e:
+            print(f"[DriftDetector] blame_commit error: {e}")
+            return None
+
+    def detect(self, feature_name: str) -> dict | None:
+        """
+        Run both strategies for a single feature.
+        Returns a drift event dict if drift detected, else None.
+        """
+        observations = self.get_recent_outputs(feature_name, limit=20)
+        if not observations:
+            return None
+
+        if not self.memory or not self.memory.get_schema_snapshot(feature_name):
+            outputs = [o.get("output", "") or "" for o in observations]
+            self.capture_schema_snapshot(feature_name, outputs)
+            return None
+
+        validation = self.validate_observations(feature_name, observations)
+        fail_rate = validation.get("fail_rate", 0.0)
+
+        if fail_rate < self.fail_rate_threshold:
+            score_reg = self.check_score_regression(feature_name)
+            if not score_reg:
+                return None
+            drift_type = "score_regression"
+            severity = "medium"
+            details = score_reg
+        else:
+            drift_type = "schema_break"
+            severity = "high" if fail_rate > 0.5 else "medium"
+            details = validation
+
+        drift_start = str(observations[0].get("start_time", ""))
+        blame = self.blame_commit(drift_start)
+
+        return {
+            "feature_name": feature_name,
+            "drift_type": drift_type,
+            "severity": severity,
+            "validation_fail_rate": fail_rate,
+            "details": details,
+            "blame_commit_sha": blame.get("sha") if blame else None,
+            "blame_commit_message": blame.get("message") if blame else None,
+        }
+
     def check_score_regression(self, feature_name: str) -> dict | None:
         """
         Strategy B: compare last-24h avg score vs 7-day baseline.
