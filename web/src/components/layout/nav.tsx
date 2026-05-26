@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/incidents', label: 'Incidents' },
+  { href: '/forensics', label: 'Forensics' },
   { href: '/risk', label: 'Risk' },
   { href: '/digest', label: 'Digest' },
   { href: '/settings', label: 'Settings' },
