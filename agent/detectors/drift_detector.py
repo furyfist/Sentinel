@@ -64,6 +64,50 @@ class DriftDetector:
             print(f"[DriftDetector] get_recent_outputs error: {e}")
             return []
 
+    def _infer_schema(self, parsed) -> dict:
+        """Recursively extract key→type map from a parsed JSON value."""
+        if isinstance(parsed, dict):
+            return {k: self._infer_schema(v) for k, v in parsed.items()}
+        elif isinstance(parsed, list):
+            return {"_type": "array", "_item": self._infer_schema(parsed[0]) if parsed else "unknown"}
+        else:
+            return type(parsed).__name__
+
+    def _merge_schemas(self, schemas: list[dict]) -> dict:
+        """Produce the union of keys seen across multiple schema samples."""
+        if not schemas:
+            return {}
+        merged = {}
+        for schema in schemas:
+            if isinstance(schema, dict):
+                for k, v in schema.items():
+                    if k not in merged:
+                        merged[k] = v
+        return merged
+
+    def capture_schema_snapshot(self, feature_name: str, sample_outputs: list[str]) -> dict:
+        """
+        Analyze N sample outputs for a feature, derive a JSON schema, and store it.
+        If outputs are JSON → infer key-type map.
+        If outputs are plain text → store {"type": "text"}.
+        """
+        schemas = []
+        for output in sample_outputs:
+            if not output:
+                continue
+            try:
+                parsed = json.loads(output)
+                schemas.append(self._infer_schema(parsed))
+            except (json.JSONDecodeError, TypeError):
+                schemas.append({"_type": "text"})
+
+        consensus = self._merge_schemas(schemas) if schemas else {"_type": "text"}
+
+        if self.memory:
+            self.memory.save_schema_snapshot(feature_name, consensus, sample_count=len(sample_outputs))
+
+        return consensus
+
     def check_score_regression(self, feature_name: str) -> dict | None:
         """
         Strategy B: compare last-24h avg score vs 7-day baseline.
