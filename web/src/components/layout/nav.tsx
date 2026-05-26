@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { api } from '@/lib/api'
 
 const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/incidents', label: 'Incidents' },
   { href: '/forensics', label: 'Forensics' },
+  { href: '/approvals', label: 'Approvals', badge: true },
   { href: '/risk', label: 'Risk' },
   { href: '/digest', label: 'Digest' },
   { href: '/settings', label: 'Settings' },
@@ -15,6 +18,18 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname()
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    const fetchPending = () => {
+      api.approvals.stats()
+        .then(s => setPendingCount(s.pending ?? 0))
+        .catch(() => {})
+    }
+    fetchPending()
+    const interval = setInterval(fetchPending, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
@@ -32,6 +47,7 @@ export function Nav() {
               link.href === '/'
                 ? pathname === '/'
                 : pathname.startsWith(link.href)
+            const showBadge = link.badge && pendingCount > 0
             return (
               <Link
                 key={link.href}
@@ -45,12 +61,19 @@ export function Nav() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span
-                  className={`relative font-medium transition-colors ${
-                    active ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {link.label}
+                <span className="relative flex items-center gap-1.5">
+                  <span
+                    className={`font-medium transition-colors ${
+                      active ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {link.label}
+                  </span>
+                  {showBadge && (
+                    <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-red-500 text-white rounded-full leading-none">
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
                 </span>
               </Link>
             )
