@@ -15,6 +15,7 @@ GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
+SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 SLACK_INCIDENTS_CHANNEL = os.environ.get("SLACK_INCIDENTS_CHANNEL", "#incidents")
 
 COST_SPIKE_MULTIPLIER = float(os.environ.get("COST_SPIKE_MULTIPLIER", "2.5"))
