@@ -43,6 +43,18 @@ def run_anomaly_gate():
         log.error(f"Anomaly gate error: {e}")
 
 
+@scheduler.scheduled_job("interval", minutes=30, id="expire_approvals")
+def run_expire_approvals():
+    log.info("Expiring stale approvals...")
+    try:
+        from agent import memory as mem
+        from agent.governance.approval_gate import ApprovalGate
+        gate = ApprovalGate(memory=mem)
+        gate.expire_stale_approvals()
+    except Exception as e:
+        log.error(f"Expiry job error: {e}")
+
+
 @scheduler.scheduled_job("cron", day_of_week="mon", hour=9, minute=0, id="weekly_digest")
 def run_weekly():
     log.info("Running Weekly Digest...")

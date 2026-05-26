@@ -78,6 +78,34 @@ class ApprovalGate:
         except Exception:
             pass
 
+    def expire_stale_approvals(self):
+        """Mark expired pending approvals and update their Slack messages."""
+        if not self.memory:
+            return
+        stale = self.memory.get_expired_approvals()
+        for approval in stale:
+            self.memory.update_approval(approval["id"], status="expired")
+            slack_ts = approval.get("slack_ts")
+            slack_channel = approval.get("slack_channel") or self.channel
+            if slack_ts and slack_channel:
+                try:
+                    from agent.actions import slack_poster
+                    import requests
+                    from agent.config import SLACK_BOT_TOKEN
+                    requests.post(
+                        "https://slack.com/api/chat.update",
+                        json={
+                            "channel": slack_channel,
+                            "ts": slack_ts,
+                            "text": "⏰ Approval expired (no action taken)",
+                            "blocks": [],
+                        },
+                        headers={"Authorization": f"Bearer {SLACK_BOT_TOKEN}"},
+                        timeout=5,
+                    )
+                except Exception:
+                    pass
+
     def route(self, anomaly: AnomalyResult):
         if self.should_auto_act(anomaly):
             self.execute_action(anomaly)

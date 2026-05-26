@@ -82,6 +82,8 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 action_type TEXT NOT NULL,
+                anomaly_type TEXT,
+                severity TEXT,
                 context TEXT NOT NULL,
                 status TEXT DEFAULT 'pending',
                 resolved_at TIMESTAMP,
@@ -100,6 +102,11 @@ def init_db() -> None:
                 keep_reasons TEXT
             );
         """)
+        for col, col_type in [("anomaly_type", "TEXT"), ("severity", "TEXT")]:
+            try:
+                conn.execute(f"ALTER TABLE approval_queue ADD COLUMN {col} {col_type}")
+            except Exception:
+                pass
 
 
 init_db()
@@ -289,18 +296,19 @@ def get_drift_events(limit: int = 20) -> list[dict]:
 def save_approval(
     action_type: str,
     context: dict,
+    anomaly_type: str = None,
+    severity: str = None,
     slack_channel: str = None,
     slack_ts: str = None,
     expires_hours: int = 4,
 ) -> int:
-    expires_at = datetime.now(timezone.utc).replace(tzinfo=None)
     from datetime import timedelta
     expires_at = (datetime.utcnow() + timedelta(hours=expires_hours)).isoformat()
     with get_connection() as conn:
         cur = conn.execute(
-            """INSERT INTO approval_queue (action_type, context, slack_channel, slack_ts, expires_at)
-               VALUES (?, ?, ?, ?, ?)""",
-            (action_type, json.dumps(context), slack_channel, slack_ts, expires_at),
+            """INSERT INTO approval_queue (action_type, anomaly_type, severity, context, slack_channel, slack_ts, expires_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (action_type, anomaly_type, severity, json.dumps(context), slack_channel, slack_ts, expires_at),
         )
         return cur.lastrowid
 
@@ -336,14 +344,20 @@ def get_approvals(status: str = None, limit: int = 50) -> list[dict]:
         return result
 
 
-def update_approval(approval_id: int, status: str, resolved_by: str = None) -> None:
+def update_approval(approval_id: int, status: str = None, resolved_by: str = None, slack_ts: str = None) -> None:
     with get_connection() as conn:
-        conn.execute(
-            """UPDATE approval_queue
-               SET status = ?, resolved_at = CURRENT_TIMESTAMP, resolved_by = ?
-               WHERE id = ?""",
-            (status, resolved_by, approval_id),
-        )
+        if slack_ts is not None:
+            conn.execute(
+                "UPDATE approval_queue SET slack_ts = ? WHERE id = ?",
+                (slack_ts, approval_id),
+            )
+        if status is not None:
+            conn.execute(
+                """UPDATE approval_queue
+                   SET status = ?, resolved_at = CURRENT_TIMESTAMP, resolved_by = ?
+                   WHERE id = ?""",
+                (status, resolved_by, approval_id),
+            )
 
 
 def get_expired_approvals() -> list[dict]:
