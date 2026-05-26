@@ -149,6 +149,69 @@ Expected:
 
 ---
 
+## Phase 3 — Prompt Drift Detection
+
+### 13. Seed the drift scenario
+```bash
+python scripts/seed_drift_scenario.py
+Expected: 50 good observations + snapshot captured + 10 drifted observations seeded
+```
+
+### 14. Run drift patrol (dry run)
+```bash
+.\venv\Scripts\python agent/modes/drift_patrol.py --dry-run
+Expected:
+- "support-bot" feature found
+- Validation: N/20 passed, fail_rate > 15%
+- Drift event saved to SQLite
+- [DRY RUN] Would post to Slack
+```
+
+### 15. Drift events in SQLite
+```bash
+.\venv\Scripts\python -c "from agent import memory; print(memory.get_drift_events())"
+Expected: at least 1 row with drift_type='schema_break', feature_name='support-bot'
+```
+
+### 16. Schema snapshots API
+```
+GET http://localhost:8000/api/quality/snapshots
+Expected: JSON array including support-bot snapshot with keys: response, confidence, category
+```
+
+### 17. Drift events API
+```
+GET http://localhost:8000/api/quality/drift
+Expected: JSON array with drift events
+```
+
+### 18. Feature validation API
+```
+GET http://localhost:8000/api/quality/feature/support-bot/validation
+Expected: JSON with fail_rate > 0, failures list showing missing keys
+```
+
+### 19. Trigger scan via API
+```
+POST http://localhost:8000/api/quality/scan
+Expected: {"status": "scan_started"}
+Check server logs for drift patrol output
+```
+
+### 20. Validate blame commit (if commits exist)
+```bash
+.\venv\Scripts\python -c "
+from agent import coral_client, memory
+from agent.detectors.drift_detector import DriftDetector
+d = DriftDetector(coral_client, memory)
+blame = d.blame_commit('$(date -u +%Y-%m-%dT%H:%M:%SZ)')
+print('Blame:', blame)
+"
+Expected: dict with sha + message, or None if no matching commits
+```
+
+---
+
 ## General Checks
 
 ### API routes all respond
