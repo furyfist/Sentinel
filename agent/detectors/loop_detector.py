@@ -1,3 +1,4 @@
+from collections import Counter
 from agent.config import AGENT_LOOP_GENERATION_THRESHOLD
 
 
@@ -34,3 +35,55 @@ class LoopDetector:
         except Exception as e:
             print(f"[LoopDetector] detect_loops error: {e}")
             return []
+
+    def fingerprint_loop(self, trace_id: str) -> dict:
+        """
+        Pull full observation chain for a trace and compute loop fingerprint:
+        - name_histogram: how many times each observation name appears
+        - most_repeated_name / repeat_count: the dominant repeated call
+        - cost_velocity: cost per minute during the loop window
+        """
+        sql = f"""
+            SELECT name, start_time, total_cost, model
+            FROM langfuse.observations
+            WHERE trace_id = '{trace_id}'
+            ORDER BY start_time ASC
+        """
+        try:
+            observations = self.coral.query(sql)
+        except Exception as e:
+            return {"error": str(e), "trace_id": trace_id}
+
+        if not observations:
+            return {"trace_id": trace_id, "gen_count": 0}
+
+        name_counts = Counter(o.get("name", "unknown") for o in observations)
+        most_repeated, repeat_count = name_counts.most_common(1)[0]
+
+        total_cost = sum(float(o.get("total_cost") or 0) for o in observations)
+
+        cost_velocity = 0.0
+        if len(observations) >= 2:
+            first = observations[0].get("start_time")
+            last = observations[-1].get("start_time")
+            if first and last:
+                try:
+                    from datetime import datetime
+                    if isinstance(first, str):
+                        first = datetime.fromisoformat(first.replace("Z", "+00:00"))
+                    if isinstance(last, str):
+                        last = datetime.fromisoformat(last.replace("Z", "+00:00"))
+                    span_minutes = (last - first).total_seconds() / 60
+                    cost_velocity = total_cost / max(span_minutes, 0.1)
+                except Exception:
+                    pass
+
+        return {
+            "trace_id": trace_id,
+            "gen_count": len(observations),
+            "name_histogram": dict(name_counts),
+            "most_repeated_name": most_repeated,
+            "repeat_count": repeat_count,
+            "total_cost": total_cost,
+            "cost_velocity_per_min": round(cost_velocity, 6),
+        }
