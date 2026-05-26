@@ -34,6 +34,29 @@ class ApprovalGate:
                 f"⚡ Auto-action `{action}` executed — {anomaly.description}",
             )
 
+    def execute_action_for_approval(self, approval: dict):
+        """Execute the action stored in an approval record (used by web UI + Slack callbacks)."""
+        action_type = approval.get("action_type", "")
+        context = approval.get("context") or {}
+
+        if action_type == "kill_loop":
+            trace_id = context.get("trace_id", "")
+            if self.memory and trace_id:
+                self.memory.update_loop_detection(trace_id, status="killed", kill_method="slack_approval")
+
+        elif action_type in ("create_issue", "review"):
+            try:
+                from agent.actions import github_issue_creator
+                summary = context.get("summary", "Sentinel anomaly detected")
+                anomaly_type = approval.get("anomaly_type", "unknown")
+                severity = approval.get("severity", "unknown")
+                github_issue_creator.create_incident_issue(
+                    title=f"[Sentinel] {anomaly_type} — severity: {severity}",
+                    body=f"**Approved via Sentinel**\n\n{summary}",
+                )
+            except Exception:
+                pass
+
     def create_approval_request(self, anomaly: AnomalyResult) -> int:
         """Save approval record and return its ID."""
         if not self.memory:
