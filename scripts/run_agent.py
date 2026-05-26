@@ -23,6 +23,26 @@ def run_oncall():
         log.error(f"On-Call Brain error: {e}")
 
 
+@scheduler.scheduled_job("interval", minutes=15, id="anomaly_gate")
+def run_anomaly_gate():
+    log.info("Running anomaly detector + approval gate...")
+    try:
+        from agent import coral_client, memory as mem
+        from agent.anomaly_detector import AnomalyDetector
+        from agent.governance.approval_gate import ApprovalGate
+
+        detector = AnomalyDetector(coral_client=coral_client, memory=mem)
+        gate = ApprovalGate(memory=mem)
+
+        anomalies = detector.run_all()
+        log.info(f"  {len(anomalies)} anomalies found")
+        for anomaly in anomalies:
+            log.info(f"  routing: {anomaly.type} [{anomaly.severity}]")
+            gate.route(anomaly)
+    except Exception as e:
+        log.error(f"Anomaly gate error: {e}")
+
+
 @scheduler.scheduled_job("cron", day_of_week="mon", hour=9, minute=0, id="weekly_digest")
 def run_weekly():
     log.info("Running Weekly Digest...")
