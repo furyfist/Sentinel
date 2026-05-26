@@ -142,6 +142,38 @@ def weekly_digest_shipped(owner: str = GITHUB_OWNER, repo: str = GITHUB_REPO) ->
     return coral_client.query(sql)
 
 
+def loop_detection_q16(threshold: int = 8) -> list[dict]:
+    """Q16 — traces with abnormally high generation counts in the last 2 hours."""
+    sql = f"""
+        SELECT
+            trace_id,
+            COUNT(*) as gen_count,
+            MIN(start_time) as first_gen,
+            MAX(start_time) as last_gen,
+            SUM(total_cost) as total_cost,
+            COUNT(DISTINCT name) as unique_names
+        FROM langfuse.observations
+        WHERE type = 'GENERATION'
+            AND start_time > NOW() - INTERVAL '2 hours'
+        GROUP BY trace_id
+        HAVING COUNT(*) > {threshold}
+        ORDER BY gen_count DESC
+        LIMIT 20
+    """
+    return coral_client.query(sql)
+
+
+def loop_fingerprint_q17(trace_id: str) -> list[dict]:
+    """Q17 — full observation chain for a specific trace (loop fingerprinting)."""
+    sql = f"""
+        SELECT name, start_time, total_cost, model
+        FROM langfuse.observations
+        WHERE trace_id = '{trace_id}'
+        ORDER BY start_time ASC
+    """
+    return coral_client.query(sql)
+
+
 def agent_loop_detection() -> list[dict]:
     """Query 7.7 — traces with >10 generations in the last hour (runaway agent loops)."""
     sql = """
