@@ -1,4 +1,4 @@
-import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection, TraceGraph, WorstTrace } from '@/types'
+import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection, TraceGraph, WorstTrace, ApprovalItem, ApprovalStats } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
@@ -56,4 +56,21 @@ export const api = {
     incidentGraph: (start: string, end: string) => get<TraceGraph>(`/forensics/incident?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
     worstTraces: (limit = 10) => get<WorstTrace[]>(`/forensics/worst-traces?limit=${limit}`),
   },
+
+  approvals: {
+    list: (status?: string) => get<ApprovalItem[]>(`/approvals${status ? `?status=${status}` : ''}`),
+    stats: () => get<ApprovalStats>('/approvals/stats'),
+    approve: (id: number) => post<ApprovalItem>(`/approvals/${id}/approve`, {}),
+    reject: (id: number) => post<ApprovalItem>(`/approvals/${id}/reject`, {}),
+  },
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`)
+  return res.json()
 }

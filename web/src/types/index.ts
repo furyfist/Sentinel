@@ -96,3 +96,25 @@ export interface LoopDetection {
   kill_method: string | null
   slack_ts: string | null
 }
+
+export interface ApprovalItem {
+  id: number
+  created_at: string
+  action_type: string
+  anomaly_type: string | null
+  severity: string | null
+  context: Record<string, unknown>
+  status: string
+  resolved_at: string | null
+  resolved_by: string | null
+  slack_ts: string | null
+  expires_at: string | null
+}
+
+export interface ApprovalStats {
+  pending: number
+  approved: number
+  rejected: number
+  expired: number
+  avg_resolution_minutes: number | null
+}
