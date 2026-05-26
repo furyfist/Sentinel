@@ -21,47 +21,30 @@ class AnomalyDetector:
         self.config = config or {}
 
     def detect_agent_loop(self) -> AnomalyResult | None:
-        """Detect traces with excessive generation counts indicating a loop."""
+        """Detect traces with excessive generation counts using LoopDetector."""
         if not self.coral:
             return None
-        try:
-            results = self.coral.query("""
-                SELECT
-                    traceId,
-                    COUNT(*) as gen_count,
-                    SUM(calculatedTotalCost) as total_cost
-                FROM langfuse.observations
-                WHERE type = 'GENERATION'
-                    AND startTime > NOW() - INTERVAL '2 hours'
-                GROUP BY traceId
-                HAVING COUNT(*) > 8
-                ORDER BY gen_count DESC
-                LIMIT 1
-            """)
-            if not results:
-                return None
-
-            row = results[0]
-            gen_count = row.get("gen_count", 0)
-            cost = float(row.get("total_cost") or 0)
-            trace_id = row.get("traceId", "")
-            threshold = self.config.get("loop_gen_threshold", AGENT_LOOP_GENERATION_THRESHOLD)
-
-            if gen_count <= threshold:
-                return None
-
-            severity = "critical" if gen_count > 20 else "high"
-            return AnomalyResult(
-                type="loop_detected",
-                severity=severity,
-                detected_at=datetime.utcnow(),
-                description=f"Agent loop: {gen_count} generations on trace {trace_id}, cost ${cost:.4f}",
-                metadata={"trace_id": trace_id, "gen_count": gen_count, "cost": cost},
-                requires_approval=gen_count <= 20,
-                suggested_action="kill_loop",
-            )
-        except Exception:
+        from agent.detectors.loop_detector import LoopDetector
+        detector = LoopDetector(self.coral, self.memory, self.config)
+        loops = detector.detect_loops()
+        if not loops:
             return None
+
+        worst = loops[0]
+        gen_count = int(worst.get("gen_count", 0))
+        cost = float(worst.get("total_cost") or 0)
+        trace_id = worst.get("trace_id", "")
+
+        severity = "critical" if gen_count > 20 else "high"
+        return AnomalyResult(
+            type="loop_detected",
+            severity=severity,
+            detected_at=datetime.utcnow(),
+            description=f"Agent loop: {gen_count} generations on trace {trace_id}, cost ${cost:.4f}",
+            metadata={"trace_id": trace_id, "gen_count": gen_count, "cost": cost},
+            requires_approval=gen_count <= 20,
+            suggested_action="kill_loop",
+        )
 
     def detect_prompt_drift(self) -> AnomalyResult | None:
         """Stub — implemented fully in drift_detector.py (Phase 3)."""
