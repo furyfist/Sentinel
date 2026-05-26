@@ -87,3 +87,46 @@ class LoopDetector:
             "total_cost": total_cost,
             "cost_velocity_per_min": round(cost_velocity, 6),
         }
+
+    def fire_loop_alert(self, loop: dict, channel: str) -> str | None:
+        """
+        Save loop to SQLite and post a Slack alert with a Kill Loop button.
+        Returns the Slack message ts, or None if Slack is unavailable.
+        """
+        from agent.actions.slack_poster import post_loop_alert
+        trace_id = loop.get("trace_id", "unknown")
+        gen_count = int(loop.get("gen_count", 0))
+        cost = float(loop.get("total_cost") or 0)
+        fp = self.fingerprint_loop(trace_id)
+        tool_pattern = fp.get("most_repeated_name", "unknown")
+
+        slack_ts = None
+        try:
+            slack_ts = post_loop_alert(
+                channel=channel,
+                trace_id=trace_id,
+                gen_count=gen_count,
+                cost=cost,
+                tool_pattern=f"{tool_pattern} x{fp.get('repeat_count', gen_count)}",
+            )
+        except Exception as e:
+            print(f"[LoopDetector] Slack alert failed: {e}")
+
+        if self.memory:
+            import json
+            self.memory.save_loop_detection(
+                trace_id=trace_id,
+                loop_count=gen_count,
+                cost_burned=cost,
+                tool_pattern=json.dumps(fp.get("name_histogram", {})),
+                slack_ts=slack_ts,
+            )
+
+        return slack_ts
+
+    def run(self, channel: str) -> list[dict]:
+        """Detect all loops and fire alerts. Returns list of loops found."""
+        loops = self.detect_loops()
+        for loop in loops:
+            self.fire_loop_alert(loop, channel)
+        return loops
