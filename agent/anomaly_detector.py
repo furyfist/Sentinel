@@ -161,3 +161,10 @@ class AnomalyDetector:
             if result:
                 results.append(result)
         return results
+
+
+def detect_cost_spike(current: float, baseline: float, multiplier: float = None) -> bool:
+    """Compatibility shim — returns True if current cost exceeds baseline by the configured multiplier."""
+    from agent.config import COST_SPIKE_MULTIPLIER
+    m = multiplier or COST_SPIKE_MULTIPLIER
+    return baseline > 0 and current > baseline * m

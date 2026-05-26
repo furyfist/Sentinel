@@ -174,6 +174,25 @@ def loop_fingerprint_q17(trace_id: str) -> list[dict]:
     return coral_client.query(sql)
 
 
+def get_recent_traces(hours: int = 24) -> list[dict]:
+    """Fetch recent traces with error/cost/gen metadata for smart sampling."""
+    sql = f"""
+        SELECT
+            trace_id,
+            COUNT(*) as gen_count,
+            SUM(total_cost) as total_cost,
+            MAX(CASE WHEN level IN ('ERROR', 'WARNING') THEN 1 ELSE 0 END) as has_error,
+            MIN(start_time) as started_at
+        FROM langfuse.observations
+        WHERE type = 'GENERATION'
+            AND start_time > NOW() - INTERVAL '{hours} hours'
+        GROUP BY trace_id
+        ORDER BY started_at DESC
+        LIMIT 1000
+    """
+    return coral_client.query(sql)
+
+
 def agent_loop_detection() -> list[dict]:
     """Query 7.7 — traces with >10 generations in the last hour (runaway agent loops)."""
     sql = """

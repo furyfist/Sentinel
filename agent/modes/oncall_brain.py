@@ -18,6 +18,24 @@ def _compute_baseline(cost_rows: list) -> float:
 def run(dry_run: bool = False, force: bool = False) -> None:
     print(f"Starting On-Call Brain (dry_run={dry_run})...")
 
+    # Step 0 — smart sampling: filter recent traces, keep only actionable ones
+    print("  [0/7] Running smart sampler...")
+    try:
+        from agent.sampling.smart_sampler import SmartSampler
+        raw_traces = query_library.get_recent_traces(hours=24)
+        sampler = SmartSampler(memory=memory)
+        kept, dropped = sampler.filter_traces(raw_traces)
+        reasons = sampler.get_reason_breakdown(kept)
+        print(f"        {len(kept)}/{len(raw_traces)} traces kept ({len(dropped)} dropped)")
+        memory.save_sampling_stats(
+            total_traces=len(raw_traces),
+            sampled_traces=len(kept),
+            dropped_traces=len(dropped),
+            keep_reasons=reasons,
+        )
+    except Exception as e:
+        print(f"        Sampler error (non-fatal): {e}")
+
     # Step 1 — fetch last 24h of hourly cost and compute baseline
     print("  [1/7] Fetching Langfuse cost data...")
     cost_rows = query_library.cost_spike_detection()
