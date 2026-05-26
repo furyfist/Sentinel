@@ -51,8 +51,36 @@ def _handle_approve(approval_id: int, user_id: str, response_url: str):
     if not approval:
         return
 
+    _execute_approved_action(approval)
     memory.update_approval(approval_id, status="approved", resolved_by=user_id)
     _update_slack_message(response_url, f"✅ Approved by <@{user_id}>")
+
+
+def _execute_approved_action(approval: dict):
+    action_type = approval.get("action_type", "")
+    context = approval.get("context", {}) if isinstance(approval.get("context"), dict) else {}
+
+    try:
+        if action_type == "kill_loop":
+            trace_id = context.get("trace_id", "")
+            if trace_id:
+                memory.update_loop_detection(trace_id, status="killed", kill_method="slack_approval")
+
+        elif action_type in ("create_issue", "review"):
+            from agent.actions import github_issue_creator
+            summary = context.get("summary", "Sentinel anomaly detected")
+            anomaly_type = approval.get("anomaly_type", "unknown")
+            severity = approval.get("severity", "unknown")
+            github_issue_creator.create_incident_issue(
+                title=f"[Sentinel] {anomaly_type} — severity: {severity}",
+                body=f"**Approved via Slack**\n\n{summary}",
+            )
+
+        elif action_type == "request_changes":
+            pass
+
+    except Exception:
+        pass
 
 
 def _handle_reject(approval_id: int, user_id: str, response_url: str):
