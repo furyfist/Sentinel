@@ -52,3 +52,15 @@ export interface CommitDetail {
   author: string | null
   url: string
 }
+
+export interface LoopDetection {
+  id: number
+  trace_id: string
+  detected_at: string
+  loop_count: number
+  cost_burned: number
+  tool_pattern: string | null
+  status: string
+  kill_method: string | null
+  slack_ts: string | null
+}

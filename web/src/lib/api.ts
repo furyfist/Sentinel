@@ -1,4 +1,4 @@
-import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail } from '@/types'
+import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
@@ -43,5 +43,11 @@ export const api = {
 
   commits: {
     get: (shas: string[]) => get<CommitDetail[]>(`/commits?shas=${shas.join(',')}`),
+  },
+
+  loops: {
+    active: () => get<LoopDetection[]>('/loops/active'),
+    history: (limit = 50) => get<LoopDetection[]>(`/loops/history?limit=${limit}`),
+    fingerprint: (traceId: string) => get<Record<string, unknown>>(`/loops/${traceId}/fingerprint`),
   },
 }
