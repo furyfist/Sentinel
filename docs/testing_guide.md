@@ -276,6 +276,102 @@ Expected: no output (exit code 0)
 
 ---
 
+## Phase 5 — Human-in-the-Loop Governance
+
+### 28. ApprovalGate imports and routes
+```bash
+.\venv\Scripts\python -c "
+from agent.governance.approval_gate import ApprovalGate
+from agent import memory
+gate = ApprovalGate(memory=memory)
+print('should_auto_act (loop 25 gens):', gate.should_auto_act(type('A', (), {'type': 'loop_detected', 'metadata': {'gen_count': 25}})()))
+"
+Expected: should_auto_act = True
+```
+
+### 29. Approval saved to SQLite
+```bash
+.\venv\Scripts\python -c "
+from agent import memory
+aid = memory.save_approval(
+    action_type='create_issue',
+    anomaly_type='drift_detected',
+    severity='high',
+    context={'summary': 'test drift'},
+)
+print('Approval ID:', aid)
+print('Record:', memory.get_approval(aid))
+"
+Expected: new approval record with status='pending'
+```
+
+### 30. Approvals API endpoints
+```
+GET http://localhost:8000/api/approvals
+Expected: JSON array (all approvals)
+
+GET http://localhost:8000/api/approvals?status=pending
+Expected: JSON array (pending only)
+
+GET http://localhost:8000/api/approvals/stats
+Expected: { pending: N, approved: N, rejected: N, expired: N, avg_resolution_minutes: ... }
+
+POST http://localhost:8000/api/approvals/<id>/approve
+Expected: approval record with status='approved', resolved_by='web_ui'
+
+POST http://localhost:8000/api/approvals/<id>/reject
+Expected: approval record with status='rejected'
+```
+
+### 31. Approval via Slack buttons
+After running `test_webhook_flow.py` (which posts a Slack approval request):
+- Click **Approve** in Slack → approval record status = 'approved'
+- Click **Reject** → status = 'rejected'
+- Verify:
+```bash
+.\venv\Scripts\python -c "from agent import memory; print(memory.get_approvals(status='approved'))"
+```
+
+### 32. Expiry logic
+```bash
+.\venv\Scripts\python -c "
+from agent import memory
+from agent.governance.approval_gate import ApprovalGate
+gate = ApprovalGate(memory=memory)
+gate.expire_stale_approvals()
+print('Expired approvals:', memory.get_approvals(status='expired'))
+"
+Expected: runs without error (expired count may be 0 if none are stale)
+```
+
+### 33. Approvals web page
+```
+Open http://localhost:3000/approvals
+Expected:
+- Tab bar: Pending | Approved | Rejected | Expired
+- Cards show action type, severity badge, context summary, time ago
+- Pending cards have Approve/Reject buttons
+- Clicking Approve removes card and updates status
+```
+
+### 34. Nav badge
+```
+Open http://localhost:3000
+Expected:
+- "Approvals" link appears in nav between Forensics and Risk
+- Red badge shows pending count (if any pending approvals exist)
+- Badge updates every 30 seconds
+```
+
+### 35. Full E2E loop
+1. Run: `.\venv\Scripts\python scripts/seed_loop_scenario.py`
+2. Trigger anomaly gate: `.\venv\Scripts\python -c "from agent.modes import oncall_brain; oncall_brain.run(force=True)"`
+3. Approval request appears in Slack and in `GET /api/approvals?status=pending`
+4. Approve via web UI at http://localhost:3000/approvals
+5. Verify status = 'approved' and (if GitHub configured) issue created
+
+---
+
 ## General Checks
 
 ### API routes all respond
@@ -293,6 +389,7 @@ curl http://localhost:8000/api/loops/active
 from api.main import app
 from agent.anomaly_detector import AnomalyDetector
 from agent.detectors.loop_detector import LoopDetector
+from agent.governance.approval_gate import ApprovalGate
 from agent import memory
 print('All imports OK')
 "
