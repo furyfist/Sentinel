@@ -1,4 +1,4 @@
-import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection } from '@/types'
+import type { IncidentReport, RiskHistory, DigestEntry, HealthStatus, Settings, CurrentRisk, CommitDetail, LoopDetection, TraceGraph, WorstTrace } from '@/types'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
@@ -49,5 +49,11 @@ export const api = {
     active: () => get<LoopDetection[]>('/loops/active'),
     history: (limit = 50) => get<LoopDetection[]>(`/loops/history?limit=${limit}`),
     fingerprint: (traceId: string) => get<Record<string, unknown>>(`/loops/${traceId}/fingerprint`),
+  },
+
+  forensics: {
+    traceGraph: (traceId: string) => get<TraceGraph>(`/forensics/trace/${traceId}`),
+    incidentGraph: (start: string, end: string) => get<TraceGraph>(`/forensics/incident?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
+    worstTraces: (limit = 10) => get<WorstTrace[]>(`/forensics/worst-traces?limit=${limit}`),
   },
 }

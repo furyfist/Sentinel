@@ -53,6 +53,38 @@ export interface CommitDetail {
   url: string
 }
 
+export interface GraphNode {
+  id: string
+  type: string
+  data: Record<string, unknown>
+  position: { x: number; y: number }
+}
+
+export interface GraphEdge {
+  id: string
+  source: string
+  target: string
+  label?: string
+  animated?: boolean
+  style?: Record<string, string>
+}
+
+export interface TraceGraph {
+  trace_id?: string
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  metadata?: Record<string, unknown>
+  error?: string
+}
+
+export interface WorstTrace {
+  trace_id: string
+  observation_count: number
+  total_cost: number
+  started_at: string
+  error_count: number
+}
+
 export interface LoopDetection {
   id: number
   trace_id: string
