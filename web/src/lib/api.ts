@@ -18,6 +18,16 @@ async function put<T>(path: string, body: unknown): Promise<T> {
   return res.json()
 }
 
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`)
+  return res.json()
+}
+
 export const api = {
   health: () => get<HealthStatus>('/health'),
 
@@ -73,14 +83,4 @@ export const api = {
     approve: (id: number) => post<ApprovalItem>(`/approvals/${id}/approve`, {}),
     reject: (id: number) => post<ApprovalItem>(`/approvals/${id}/reject`, {}),
   },
-}
-
-async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`)
-  return res.json()
 }

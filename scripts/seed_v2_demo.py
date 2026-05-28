@@ -151,7 +151,7 @@ def seed_drift_scenario():
     memory.save_schema_snapshot(
         feature_name="support-bot",
         schema={"response": "str", "confidence": "float", "category": "str"},
-        sample_outputs=good_samples,
+        sample_count=len(good_samples),
     )
     print("  Schema snapshot saved to SQLite.")
 
