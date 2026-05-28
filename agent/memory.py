@@ -303,7 +303,7 @@ def save_approval(
     expires_hours: int = 4,
 ) -> int:
     from datetime import timedelta
-    expires_at = (datetime.utcnow() + timedelta(hours=expires_hours)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=expires_hours)).isoformat()
     with get_connection() as conn:
         cur = conn.execute(
             """INSERT INTO approval_queue (action_type, anomaly_type, severity, context, slack_channel, slack_ts, expires_at)

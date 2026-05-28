@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from agent.config import COST_SPIKE_MULTIPLIER, AGENT_LOOP_GENERATION_THRESHOLD
 
 
@@ -39,7 +39,7 @@ class AnomalyDetector:
         return AnomalyResult(
             type="loop_detected",
             severity=severity,
-            detected_at=datetime.utcnow(),
+            detected_at=datetime.now(timezone.utc),
             description=f"Agent loop: {gen_count} generations on trace {trace_id}, cost ${cost:.4f}",
             metadata={"trace_id": trace_id, "gen_count": gen_count, "cost": cost},
             requires_approval=gen_count <= 20,
@@ -76,7 +76,7 @@ class AnomalyDetector:
                 return AnomalyResult(
                     type="drift_detected",
                     severity=severity,
-                    detected_at=datetime.utcnow(),
+                    detected_at=datetime.now(timezone.utc),
                     description=description,
                     metadata=event,
                     requires_approval=True,
@@ -110,7 +110,7 @@ class AnomalyDetector:
         return AnomalyResult(
             type="tool_failure",
             severity="high",
-            detected_at=datetime.utcnow(),
+            detected_at=datetime.now(timezone.utc),
             description=description,
             metadata={"failures": failures[:5], "total": len(failures)},
             requires_approval=True,
@@ -138,7 +138,7 @@ class AnomalyDetector:
             return AnomalyResult(
                 type="cost_spike",
                 severity=severity,
-                detected_at=datetime.utcnow(),
+                detected_at=datetime.now(timezone.utc),
                 description=f"Cost spike: ${latest:.4f}/hr vs ${avg:.4f}/hr baseline ({ratio:.1f}x)",
                 metadata={"current_cost": latest, "baseline_avg": avg, "ratio": ratio},
                 requires_approval=latest < 10.0,
