@@ -10,6 +10,7 @@ const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/incidents', label: 'Incidents' },
   { href: '/forensics', label: 'Forensics' },
+  { href: '/quality', label: 'Quality' },
   { href: '/approvals', label: 'Approvals', badge: true },
   { href: '/risk', label: 'Risk' },
   { href: '/digest', label: 'Digest' },
