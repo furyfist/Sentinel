@@ -6,7 +6,7 @@ from agent.forensics.incident_graph_builder import IncidentGraphBuilder
 
 router = APIRouter()
 _executor = ThreadPoolExecutor(max_workers=4)
-QUERY_TIMEOUT = 10
+QUERY_TIMEOUT = 120
 
 
 def _with_timeout(fn, *args, timeout=QUERY_TIMEOUT, fallback=None):

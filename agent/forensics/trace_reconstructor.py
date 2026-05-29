@@ -13,15 +13,14 @@ class TraceReconstructor:
             SELECT
                 id,
                 trace_id,
-                parent_observation_id,
                 name,
                 type,
                 model,
                 start_time,
                 end_time,
                 total_cost,
-                prompt_tokens,
-                completion_tokens,
+                input_tokens,
+                output_tokens,
                 level,
                 status_message
             FROM langfuse.observations
@@ -29,7 +28,7 @@ class TraceReconstructor:
             ORDER BY start_time ASC
         """
         try:
-            observations = self.coral.query(sql)
+            observations = self.coral.query(sql, timeout=60)
         except Exception as e:
             return {"nodes": [], "edges": [], "error": str(e)}
 
@@ -48,8 +47,8 @@ class TraceReconstructor:
             else:
                 node_type = "event"
 
-            prompt_tokens = obs.get("prompt_tokens") or 0
-            completion_tokens = obs.get("completion_tokens") or 0
+            prompt_tokens = obs.get("input_tokens") or 0
+            completion_tokens = obs.get("output_tokens") or 0
             level = obs.get("level", "DEFAULT")
             is_error = level in ("ERROR", "WARNING")
 
@@ -67,15 +66,17 @@ class TraceReconstructor:
                 "position": {"x": 0, "y": 0},
             })
 
-            parent = obs.get("parent_observation_id")
-            if parent:
-                edges.append({
-                    "id": f"e-{parent}-{obs['id']}",
-                    "source": parent,
-                    "target": obs["id"],
-                    "animated": is_error,
-                    "style": {"stroke": "#ef4444"} if is_error else {},
-                })
+        for i in range(1, len(nodes)):
+            src = nodes[i - 1]["id"]
+            tgt = nodes[i]["id"]
+            is_err = nodes[i]["data"]["is_error"]
+            edges.append({
+                "id": f"e-{src}-{tgt}",
+                "source": src,
+                "target": tgt,
+                "animated": is_err,
+                "style": {"stroke": "#ef4444"} if is_err else {},
+            })
 
         total_cost = sum(float(o.get("total_cost") or 0) for o in observations)
         error_count = sum(1 for o in observations if o.get("level") in ("ERROR", "WARNING"))
@@ -107,7 +108,7 @@ class TraceReconstructor:
             LIMIT {limit}
         """
         try:
-            return self.coral.query(sql)
+            return self.coral.query(sql, timeout=120)
         except Exception as e:
             print(f"[TraceReconstructor] get_worst_traces error: {e}")
             return []
