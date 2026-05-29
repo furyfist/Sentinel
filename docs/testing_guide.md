@@ -33,6 +33,13 @@ Verify in SQLite:
 ```bash
 .\venv\Scripts\python scripts\test_memory_crud.py
 ```
+Output:
+Loop detection CRUD: PASS
+Active loops filtered: 0
+Schema snapshot CRUD: PASS
+Drift event CRUD: PASS
+
+All memory CRUD checks: PASS
 
 ---
 
@@ -53,7 +60,8 @@ Also verify fingerprint:
 GET http://localhost:8000/api/loops/<trace_id>/fingerprint
 Expected: { most_repeated_name, repeat_count, cost_velocity }
 ```
-
+Output:
+Detection is working end-to-end. Calling /detect now only fires new alerts for unseen traces.
 ---
 
 ## 3. Prompt Drift Detection
