@@ -90,12 +90,22 @@ Output: Test 3 is passing end-to-end.
 
 ## 4. Forensics Graph Page
 
+**Status: ON HOLD — Langfuse rate limit (429)**
+
 Open `http://localhost:3000/forensics`
 
-- Sidebar shows worst traces (or "No traces found" if Langfuse is empty)
-- Click a trace → React Flow canvas renders with correct node colors:
-  - indigo = commit, red = error, amber = trace, teal = slack, violet = generation
-- "View Incident Graph" button → loads cross-source graph
+The `/api/forensics/worst-traces` query hits Langfuse via Coral and currently triggers a 429 rate limit:
+```
+Coral query failed: Error: Source rate limit exceeded (429)
+Detail: rate limit exceeded; retry after 28s
+```
+
+The sidebar stays blank while the rate limit is active. All code fixes are in place (column names corrected, timeouts increased to 120s). Retry after the rate limit window clears (~30s between attempts).
+
+Once rate limit clears, expected behavior:
+- Sidebar shows worst traces ranked by total cost
+- Click a trace → React Flow canvas renders nodes (generation/span/event) linked sequentially
+- "View Incident Graph" button → loads cross-source graph for ±2h window
 - MiniMap and Controls render correctly
 
 ---
@@ -113,6 +123,7 @@ print('Pending approval created')
 
 Open `http://localhost:3000` — the **Approvals** nav item should show a red badge with the pending count. Badge should update within 30 seconds without a page reload.
 
+Output: yes it goes from 3 -> 4
 ---
 
 ## 6. Approvals Web Page
@@ -164,6 +175,7 @@ Open `http://localhost:3000` and verify:
 - Active Loops card shows > 0 (after Langfuse indexes)
 - Pending Approvals card shows 2
 
+Ouptut: seems working to me
 ---
 
 ## 9. Incident Dependency Graph Tab
@@ -184,3 +196,4 @@ With ngrok running and Slack connected:
 curl -X POST http://localhost:8000/api/slack/actions
 Expected: 403 Missing Slack headers
 ```
+Output:Test 10 passes
