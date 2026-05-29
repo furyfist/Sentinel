@@ -47,8 +47,12 @@ export default function IncidentDetailPage() {
     if (graph) return
     setGraphLoading(true)
     const detected = inc.detected_at
-    const start = new Date(new Date(detected).getTime() - 2 * 60 * 60 * 1000).toISOString()
-    const end = new Date(new Date(detected).getTime() + 2 * 60 * 60 * 1000).toISOString()
+    // Normalize SQLite UTC timestamps (space format, no tz) before parsing
+    const normalized = detected.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1')
+    const hasTz = /Z$|[+-]\d{2}:\d{2}$/.test(normalized)
+    const detectedMs = new Date(hasTz ? normalized : normalized + 'Z').getTime()
+    const start = new Date(detectedMs - 2 * 60 * 60 * 1000).toISOString()
+    const end = new Date(detectedMs + 2 * 60 * 60 * 1000).toISOString()
     try {
       const data = await api.forensics.incidentGraph(start, end)
       setGraph({ ...data, nodes: autoLayout(data.nodes, data.edges, 'horizontal') })
@@ -88,7 +92,7 @@ export default function IncidentDetailPage() {
           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${badgeStyle}`}>
             {incident.severity ?? 'info'}
           </span>
-          <span className="text-xs text-slate-400">{incident.detection_type} · {new Date(incident.detected_at).toLocaleString()}</span>
+          <span className="text-xs text-slate-400">{incident.detection_type} · {(() => { const s = incident.detected_at.replace(' ', 'T'); return new Date(/Z$|[+-]\d{2}:\d{2}$/.test(s) ? s : s + 'Z').toLocaleString() })()}</span>
         </div>
       </div>
 
