@@ -25,9 +25,9 @@ const SEVERITY_COLORS: Record<string, string> = {
 function parseDate(iso: string): Date {
   // Normalize SQLite space format and truncate microseconds to milliseconds
   const normalized = iso.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1')
-  // Treat as UTC if no timezone info present
-  const withTz = /[Z+\-]\d*$/.test(normalized) ? normalized : normalized + 'Z'
-  return new Date(withTz)
+  // Append Z only if no timezone info present (Z, +HH:MM, or -HH:MM)
+  const hasTz = /Z$|[+-]\d{2}:\d{2}$/.test(normalized)
+  return new Date(hasTz ? normalized : normalized + 'Z')
 }
 
 function timeAgo(iso: string) {
