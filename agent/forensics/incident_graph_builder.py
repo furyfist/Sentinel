@@ -139,15 +139,24 @@ class IncidentGraphBuilder:
                 },
                 "position": {"x": 0, "y": 0},
             })
-            closest_err = errors[0] if errors else None
-            if closest_err:
+            if errors:
                 edges.append({
                     "id": f"e-error-trace-{tid}",
-                    "source": f"error-{closest_err.get('id', '')}",
+                    "source": f"error-{errors[0].get('id', '')}",
                     "target": node_id,
                     "label": "triggered",
                     "animated": True,
                 })
+            elif commits:
+                closest_commit = self._find_closest_prior(commits, t.get("started_at", ""))
+                if closest_commit:
+                    sha8 = (closest_commit.get("sha") or "")[:8]
+                    edges.append({
+                        "id": f"e-commit-trace-{tid}",
+                        "source": f"commit-{sha8}",
+                        "target": node_id,
+                        "label": "preceded",
+                    })
 
         for i, m in enumerate(messages):
             msg_id = f"message-{i}"
