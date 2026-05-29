@@ -22,9 +22,18 @@ const SEVERITY_COLORS: Record<string, string> = {
   low: 'bg-slate-100 text-slate-600 border-slate-200',
 }
 
+function parseDate(iso: string): Date {
+  // Normalize SQLite space format and truncate microseconds to milliseconds
+  const normalized = iso.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1')
+  // Treat as UTC if no timezone info present
+  const withTz = /[Z+\-]\d*$/.test(normalized) ? normalized : normalized + 'Z'
+  return new Date(withTz)
+}
+
 function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime()
+  const diff = Date.now() - parseDate(iso).getTime()
   const m = Math.floor(diff / 60000)
+  if (m < 1) return 'just now'
   if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
@@ -33,7 +42,7 @@ function timeAgo(iso: string) {
 
 function timeRemaining(iso: string | null) {
   if (!iso) return null
-  const diff = new Date(iso).getTime() - Date.now()
+  const diff = parseDate(iso).getTime() - Date.now()
   if (diff <= 0) return 'Expired'
   const m = Math.floor(diff / 60000)
   if (m < 60) return `${m}m left`
