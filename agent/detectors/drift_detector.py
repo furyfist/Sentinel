@@ -1,5 +1,7 @@
 import json
-from agent.config import GITHUB_OWNER, GITHUB_REPO
+import base64
+import requests
+from agent.config import GITHUB_OWNER, GITHUB_REPO, LANGFUSE_BASE_URL, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
 
 DRIFT_FAIL_RATE_THRESHOLD = 0.15
 SCORE_REGRESSION_DELTA = 0.1
@@ -45,21 +47,26 @@ class DriftDetector:
             return []
 
     def get_recent_outputs(self, feature_name: str, limit: int = 20) -> list[dict]:
-        """Pull the latest N observations for a feature, returning output text."""
-        if not self.coral:
-            return []
-        safe_name = feature_name.replace("'", "''")
-        sql = f"""
-            SELECT id, trace_id, output, start_time
-            FROM langfuse.observations
-            WHERE name = '{safe_name}'
-                AND type = 'GENERATION'
-                AND start_time > NOW() - INTERVAL '24 hours'
-            ORDER BY start_time DESC
-            LIMIT {limit}
-        """
+        """Pull the latest N observations for a feature via Langfuse REST API."""
         try:
-            return self.coral.query(sql, timeout=120)
+            auth = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+            resp = requests.get(
+                f"{LANGFUSE_BASE_URL}/api/public/observations",
+                params={"name": feature_name, "type": "GENERATION", "limit": limit},
+                headers={"Authorization": f"Basic {auth}"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json().get("data", [])
+            return [
+                {
+                    "id": o.get("id"),
+                    "trace_id": o.get("traceId"),
+                    "output": o.get("output") or "",
+                    "start_time": o.get("startTime"),
+                }
+                for o in data
+            ]
         except Exception as e:
             print(f"[DriftDetector] get_recent_outputs error: {e}")
             return []
