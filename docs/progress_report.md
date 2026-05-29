@@ -3,9 +3,10 @@
 **Project:** Pirates of the Coral-bean Hackathon — Track 1: Enterprise Agent  
 **Builder:** Himanshu  
 **Window:** May 27–31, 2026  
-**Branch:** `feature/sentinel-v2`  
-**Total commits on branch:** 60+  
-**Codebase:** 27 agent modules · 17 API modules · 27 frontend components · 12 scripts
+**Branch:** `main`  
+**Total commits:** 70+  
+**Codebase:** 27 agent modules · 17 API modules · 27 frontend components · 12 scripts  
+**Testing status:** All 10 manual tests passing as of May 29, 2026
 
 ---
 
@@ -238,10 +239,52 @@ scripts/
 
 ---
 
+## Bugs Fixed During Live Testing (May 29, 2026)
+
+During end-to-end manual testing, the following issues were found and fixed:
+
+| Bug | Fix |
+|---|---|
+| `/api/loops/detect` endpoint missing | Added route that calls live `detect_loops()` + fires alerts |
+| Duplicate loop alerts on repeat `/detect` calls | Skip trace IDs already active in memory |
+| Coral returns mixed table+JSON stdout | Parse last line only (JSON always last) |
+| All broad Coral queries timing out at 30s | Bumped to 120s in loop, drift, and forensics detectors |
+| `drift_patrol.py` `ModuleNotFoundError` | Added `sys.path` fix so script runs directly |
+| `output` column missing in coral observations | Switched `get_recent_outputs` to Langfuse REST API |
+| `prompt_tokens`/`completion_tokens` wrong column names | Fixed to `input_tokens`/`output_tokens` per real schema |
+| `parent_observation_id` missing in coral | Replaced with sequential edge linking by `start_time` order |
+| Forensics `QUERY_TIMEOUT = 10` killing every query | Raised to 300s at route level, 120s per query |
+| Incident graph window shifted 5.5h (IST timezone bug) | `parseDate()` normalizes SQLite UTC strings before `new Date()` |
+| `expires_at` microseconds (6 digits) breaking JS Date | Truncate to 3-digit milliseconds in `parseDate()` |
+| Timezone regex broken for `+00:00` suffix | Fixed to `/Z$|[+-]\d{2}:\d{2}$/` pattern |
+| No edges in incident graph without Sentry data | Added `commit → trace` fallback edges when errors absent |
+| Commit and trace graph nodes not interactive | Added GitHub and Langfuse links to respective nodes |
+
+---
+
+## Manual Test Results (May 29, 2026)
+
+All 10 tests from `docs/testing_guide.md` passing:
+
+| # | Test | Result |
+|---|---|---|
+| 1 | Slack Button Callbacks (Approve / Reject / Kill Loop) | ✅ Pass |
+| 2 | Langfuse Loop Detection + `/loops/detect` endpoint | ✅ Pass |
+| 3 | Prompt Drift Detection + `drift_patrol --dry-run` | ✅ Pass |
+| 4 | Forensics Graph Page — worst traces sidebar | ✅ Pass |
+| 5 | Approvals Nav Badge live update | ✅ Pass |
+| 6 | Approvals Web Page — all tabs + Approve/Reject buttons | ✅ Pass |
+| 7 | GitHub Issue created on approval | ✅ Pass |
+| 8 | Full V2 Demo Seed end-to-end | ✅ Pass |
+| 9 | Incident Dependency Graph — commit + trace nodes with links | ✅ Pass |
+| 10 | Slack Signing Secret rejects missing headers (403) | ✅ Pass |
+
+---
+
 ## What's Left (Phase 6.8–6.10)
 
 | Step | What | Status |
 |---|---|---|
 | 6.8 | Deploy — Railway (API) + Vercel (frontend) | Not started |
-| 6.9 | Write `sources/langfuse/README.md` community spec | Not started |
+| 6.9 | `sources/langfuse/README.md` community spec | Done (written earlier) |
 | 6.10 | Demo video | Not started |
