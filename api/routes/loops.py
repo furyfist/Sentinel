@@ -11,9 +11,11 @@ def run_loop_detection():
     try:
         detector = LoopDetector(coral_client, memory)
         loops = detector.detect_loops()
-        for loop in loops:
+        active_ids = {r["trace_id"] for r in memory.get_loop_detections(status="active", limit=200)}
+        new_loops = [l for l in loops if l["trace_id"] not in active_ids]
+        for loop in new_loops:
             detector.fire_loop_alert(loop, SLACK_INCIDENTS_CHANNEL)
-        return loops
+        return new_loops
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
