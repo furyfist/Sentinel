@@ -31,7 +31,7 @@ class LoopDetector:
             LIMIT 20
         """
         try:
-            return self.coral.query(sql)
+            return self.coral.query(sql, timeout=120)
         except Exception as e:
             print(f"[LoopDetector] detect_loops error: {e}")
             return []

@@ -1,8 +1,21 @@
 from fastapi import APIRouter, HTTPException
 from agent import memory, coral_client
 from agent.detectors.loop_detector import LoopDetector
+from agent.config import SLACK_INCIDENTS_CHANNEL
 
 router = APIRouter()
+
+
+@router.get("/loops/detect")
+def run_loop_detection():
+    try:
+        detector = LoopDetector(coral_client, memory)
+        loops = detector.detect_loops()
+        for loop in loops:
+            detector.fire_loop_alert(loop, SLACK_INCIDENTS_CHANNEL)
+        return loops
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/loops/active")
