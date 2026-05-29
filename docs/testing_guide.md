@@ -85,7 +85,7 @@ Expected: at least 1 row with drift_type='schema_break', feature_name='support-b
 GET http://localhost:8000/api/quality/feature/support-bot/validation
 Expected: { fail_rate > 0, failures list showing missing keys }
 ```
-
+Output: Test 3 is passing end-to-end.
 ---
 
 ## 4. Forensics Graph Page
