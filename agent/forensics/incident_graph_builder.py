@@ -14,7 +14,7 @@ class IncidentGraphBuilder:
 
     def _query(self, sql: str) -> list[dict]:
         try:
-            return self.coral.query(sql)
+            return self.coral.query(sql, timeout=120)
         except Exception as e:
             print(f"[IncidentGraphBuilder] query error: {e}")
             return []
