@@ -7,6 +7,10 @@ For each feature (observation name) seen in the last 24h:
   3. If snapshot exists → validate against it
   4. If fail rate > threshold → record drift event, blame commit, post Slack alert
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import argparse
 from agent import memory, coral_client
 from agent.config import SLACK_INCIDENTS_CHANNEL

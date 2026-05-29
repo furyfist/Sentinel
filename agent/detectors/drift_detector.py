@@ -38,7 +38,7 @@ class DriftDetector:
             LIMIT 50
         """
         try:
-            rows = self.coral.query(sql)
+            rows = self.coral.query(sql, timeout=120)
             return [r["name"] for r in rows if r.get("name")]
         except Exception as e:
             print(f"[DriftDetector] get_recent_feature_names error: {e}")
@@ -59,7 +59,7 @@ class DriftDetector:
             LIMIT {limit}
         """
         try:
-            return self.coral.query(sql)
+            return self.coral.query(sql, timeout=120)
         except Exception as e:
             print(f"[DriftDetector] get_recent_outputs error: {e}")
             return []
