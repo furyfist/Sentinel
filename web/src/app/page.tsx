@@ -378,7 +378,7 @@ function FeaturesSection() {
         </div>
         <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="group bg-white p-6 transition-colors hover:bg-slate-50/80">
+            <div key={f.title} className="group bg-white p-6 transition-colors hover:bg-slate-50/80 border border-slate-200">
               <span className="grid h-9 w-9 place-items-center rounded border border-slate-200 bg-white text-info shadow-sm">
                 {f.icon}
               </span>
