@@ -405,7 +405,7 @@ function SourcesSection() {
     { name: 'Linear', color: 'text-info', desc: 'Issues · Sprints · Assignees', badge: null },
   ]
   return (
-    <section id="sources" className="border-b border-border bg-slate-50">
+    <section id="sources" className="border-b border-border bg-slate-50/80">
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="max-w-3xl">
           <div className="font-mono text-[11px] uppercase tracking-wider text-info">Seven sources, one query plane</div>
@@ -416,7 +416,7 @@ function SourcesSection() {
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {sources.map((s) => (
-            <div key={s.name} className="rounded-lg border border-border bg-white p-5">
+            <div key={s.name} className="rounded-xl border border-border bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Boxes className={`h-4 w-4 ${s.color}`} />
@@ -432,12 +432,12 @@ function SourcesSection() {
               )}
             </div>
           ))}
-          <div className="rounded-lg border border-dashed border-border bg-white p-5">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
               <CodeXml className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-semibold">Add your own</span>
             </div>
-            <p className="mt-3 text-xs text-slate-500">Coral source specs are pluggable. Drop one in, JOIN it with the rest.</p>
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">Coral source specs are pluggable. Drop one in, JOIN it with the rest.</p>
           </div>
         </div>
       </div>
@@ -449,36 +449,36 @@ function CtaSection() {
   return (
     <section id="cta" className="border-b border-border">
       <div className="mx-auto max-w-7xl px-6 py-20">
-        <div className="relative overflow-hidden rounded-lg border border-border bg-foreground text-background">
+        <div className="relative overflow-hidden rounded-xl border border-border bg-foreground text-background">
           <div className="absolute inset-0 bg-dots opacity-10" />
-          <div className="relative grid gap-6 p-10 md:grid-cols-[1.4fr_1fr] md:items-center md:p-14">
+          <div className="relative grid gap-8 p-10 md:grid-cols-[1.4fr_1fr] md:items-center md:p-14">
             <div>
               <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                 Stop diagnosing AI failures one dashboard at a time.
               </h2>
-              <p className="mt-4 max-w-xl text-sm text-background/70 md:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-background/70 md:text-base">
                 Sentinel runs in your stack, joins the signal your team already produces, and asks before it acts. Built for the Pirates of the Coral-bean hackathon by WeMakeDevs × Coral OSS.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/dashboard"
-                  className="rounded-md bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:opacity-90"
+                  className="rounded-md bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
                 >
-                  Open Command Center
+                  Deploy on Railway + Vercel
                 </Link>
-                <a href="#" className="inline-flex items-center gap-2 rounded-md border border-background/30 px-4 py-2.5 text-sm font-medium text-background hover:bg-background/10">
+                <a href="#" className="inline-flex items-center gap-2 rounded-md border border-background/30 px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-background/10">
                   <Slack className="h-4 w-4" /> Install Slack app
                 </a>
               </div>
             </div>
-            <div className="rounded-md border border-background/15 bg-background/5 p-5 font-mono text-xs">
-              <div className="text-background/60"># 60-second install</div>
-              <div className="mt-3 leading-relaxed text-background">
-                <span className="text-success">$</span> pip install sentinel-agent<br />
-                <span className="text-success">$</span> sentinel init --sources \<br />
-                {'  '}langfuse,sentry,github,slack,\<br />
-                {'  '}datadog,pagerduty,linear<br />
-                <span className="text-success">$</span> sentinel run --mode on-call
+            <div className="rounded-lg border border-background/15 bg-background/5 p-5 font-mono text-xs leading-relaxed">
+              <div className="text-background/50"># 60-second install</div>
+              <div className="mt-3 space-y-0.5 text-background">
+                <div><span className="text-success">$</span> pip install sentinel-agent</div>
+                <div><span className="text-success">$</span> sentinel init --sources \</div>
+                <div className="pl-4 text-background/70">langfuse,sentry,github,slack,\</div>
+                <div className="pl-4 text-background/70">datadog,pagerduty,linear</div>
+                <div><span className="text-success">$</span> sentinel run --mode on-call</div>
               </div>
             </div>
           </div>
@@ -490,18 +490,20 @@ function CtaSection() {
 
 function Footer() {
   return (
-    <footer className="bg-background">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-8 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
+    <footer className="bg-background border-t border-border">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4" />
+          <div className="grid h-5 w-5 place-items-center rounded bg-foreground text-background">
+            <ShieldCheck className="h-3 w-3" />
+          </div>
           <span className="font-semibold text-foreground">Sentinel</span>
           <span>· AI Observability Agent</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <span className="font-mono uppercase tracking-wider">Built for Coral OSS</span>
-          <a href="https://github.com/Himanshu-Parangat/sentinel" className="hover:text-foreground">GitHub</a>
-          <a href="#" className="hover:text-foreground">Docs</a>
-          <a href="#" className="hover:text-foreground">Hackathon entry</a>
+          <a href="https://github.com/Himanshu-Parangat/sentinel" className="hover:text-foreground transition-colors">GitHub</a>
+          <a href="#" className="hover:text-foreground transition-colors">Docs</a>
+          <a href="#" className="hover:text-foreground transition-colors">Hackathon entry</a>
         </div>
       </div>
     </footer>
