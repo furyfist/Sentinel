@@ -3,7 +3,7 @@ import {
   ShieldCheck, Zap, GitBranch, TriangleAlert, Hand, Activity,
   MessageSquare, Network, CircuitBoard, Sparkles, Workflow,
   Siren, GitPullRequest, ChartLine, DollarSign, Boxes, CodeXml,
-  Slack,
+  Hash,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -467,7 +467,7 @@ function CtaSection() {
                   Deploy on Railway + Vercel
                 </Link>
                 <a href="#" className="inline-flex items-center gap-2 rounded-md border border-background/30 px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-background/10">
-                  <Slack className="h-4 w-4" /> Install Slack app
+                  <Hash className="h-4 w-4" /> Install Slack app
                 </a>
               </div>
             </div>
