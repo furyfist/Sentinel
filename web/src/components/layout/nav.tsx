@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { api } from '@/lib/api'
 
 const links = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/incidents', label: 'Incidents' },
   { href: '/forensics', label: 'Forensics' },
   { href: '/quality', label: 'Quality' },
@@ -44,10 +44,7 @@ export function Nav() {
 
         <nav className="flex items-center gap-0.5">
           {links.map((link) => {
-            const active =
-              link.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(link.href)
+            const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
             const showBadge = link.badge && pendingCount > 0
             return (
               <Link
