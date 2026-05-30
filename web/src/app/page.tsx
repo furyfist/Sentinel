@@ -144,23 +144,26 @@ function MetricCard({ label, value, sub, icon, accent }: {
 
 function SourcesBar() {
   const sources = [
-    { name: 'Langfuse', color: 'text-info' },
-    { name: 'Sentry', color: 'text-alert' },
-    { name: 'GitHub', color: 'text-foreground' },
-    { name: 'Slack', color: 'text-success' },
-    { name: 'Datadog', color: 'text-info' },
-    { name: 'PagerDuty', color: 'text-alert' },
-    { name: 'Linear', color: 'text-info' },
+    { name: 'Langfuse', color: 'text-info', badge: 'Custom Coral source' },
+    { name: 'Sentry', color: 'text-alert', badge: null },
+    { name: 'GitHub', color: 'text-foreground', badge: null },
+    { name: 'Slack', color: 'text-success', badge: null },
+    { name: 'Datadog', color: 'text-info', badge: null },
+    { name: 'PagerDuty', color: 'text-alert', badge: null },
+    { name: 'Linear', color: 'text-info', badge: null },
   ]
   return (
-    <section className="border-b border-border bg-slate-50">
+    <section className="border-b border-border bg-slate-50/80">
       <div className="mx-auto max-w-7xl px-6 py-5">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
           <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">Sources joined via Coral SQL</span>
           {sources.map((s) => (
-            <span key={s.name} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1">
+            <span key={s.name} className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1 shadow-sm">
               <span className={`h-1.5 w-1.5 rounded-full bg-current ${s.color}`} />
-              <span className="font-medium">{s.name}</span>
+              <span className="text-sm font-medium text-foreground">{s.name}</span>
+              {s.badge && (
+                <span className="font-mono text-[9px] uppercase tracking-wider text-slate-400">{s.badge}</span>
+              )}
             </span>
           ))}
         </div>
@@ -173,42 +176,42 @@ function ProblemsSection() {
   const problems = [
     {
       icon: <DollarSign className="h-4 w-4" />,
-      accent: 'alert',
+      accent: 'alert' as const,
       label: 'Problem 01',
       title: 'Agent loop cost explosions',
       desc: 'Multi-agent retry loops burn hundreds of dollars before anyone notices. Sentinel detects loop patterns in Langfuse traces, fires a kill signal, and posts an interactive Slack alert with a Kill button.',
     },
     {
       icon: <GitBranch className="h-4 w-4" />,
-      accent: 'warning',
+      accent: 'warning' as const,
       label: 'Problem 02',
       title: 'Prompt drift & fragility',
       desc: 'Minor prompt edits silently break downstream JSON parsing. Sentinel maintains schema snapshots per feature, validates every trace, and blames the exact GitHub commit that caused the regression.',
     },
     {
       icon: <TriangleAlert className="h-4 w-4" />,
-      accent: 'alert',
+      accent: 'alert' as const,
       label: 'Problem 03',
       title: 'Silent tool call failures',
       desc: 'Tools return 200 OK with semantically wrong output. Sentinel cross-references tool outputs against Sentry errors in the same trace window to surface failures that look like successes.',
     },
     {
       icon: <Hand className="h-4 w-4" />,
-      accent: 'info',
+      accent: 'info' as const,
       label: 'Problem 04',
       title: 'No human-in-the-loop governance',
       desc: 'Agents execute high-risk actions without checkpoints. Sentinel routes anomalies through an approval gate — Slack buttons or a web queue, full audit trail, state written back.',
     },
     {
       icon: <Activity className="h-4 w-4" />,
-      accent: 'success',
+      accent: 'success' as const,
       label: 'Problem 05',
       title: 'Telemetry data saturation',
       desc: 'AI systems generate overwhelming trace volume. Sentinel scores every trace and drops routine noise — ~85% volume reduction while retaining 100% of actionable data.',
     },
     {
       icon: <MessageSquare className="h-4 w-4" />,
-      accent: 'foreground',
+      accent: 'dark' as const,
       label: 'The Slack JOIN',
       title: 'Social context, fused via SQL.',
       desc: 'Every detection JOINs slack.messages on the incident window — surfacing what the team was saying during the event. No other observability tool fuses social and technical signal this way.',
@@ -227,7 +230,7 @@ function ProblemsSection() {
             Logs, metrics, and traces in isolation miss the cross-source patterns that actually cause incidents.
           </p>
         </div>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
           {problems.map((p) => (
             <ProblemCard key={p.label} {...p} />
           ))}
@@ -237,23 +240,25 @@ function ProblemsSection() {
   )
 }
 
+type Accent = 'alert' | 'warning' | 'info' | 'success' | 'dark'
+
 function ProblemCard({ icon, accent, label, title, desc }: {
-  icon: React.ReactNode; accent: string; label: string; title: string; desc: string
+  icon: React.ReactNode; accent: Accent; label: string; title: string; desc: string
 }) {
-  const colors: Record<string, string> = {
+  const iconColors: Record<Accent, string> = {
     alert: 'bg-alert/10 text-alert border-alert/20',
-    warning: 'bg-warning/15 text-foreground border-warning/30',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200',
     info: 'bg-info/10 text-info border-info/20',
     success: 'bg-success/10 text-success border-success/20',
-    foreground: 'bg-foreground text-background border-foreground',
+    dark: 'bg-foreground text-background border-foreground',
   }
   return (
-    <div className="bg-white p-6">
+    <div className="bg-white p-6 transition-colors hover:bg-slate-50/60">
       <div className="flex items-center gap-3">
-        <span className={`grid h-9 w-9 place-items-center rounded border ${colors[accent]}`}>{icon}</span>
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded border ${iconColors[accent]}`}>{icon}</span>
         <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">{label}</span>
       </div>
-      <h3 className="mt-4 text-lg font-semibold tracking-tight">{title}</h3>
+      <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-slate-500">{desc}</p>
     </div>
   )
