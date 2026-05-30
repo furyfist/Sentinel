@@ -295,7 +295,7 @@ function HowItWorksSection() {
     { num: '04', title: 'Govern', desc: 'High-risk action waits for human approval.' },
   ]
   return (
-    <section id="how" className="border-b border-border bg-slate-50">
+    <section id="how" className="border-b border-border bg-slate-50/80">
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="max-w-3xl">
           <div className="font-mono text-[11px] uppercase tracking-wider text-info">How it works</div>
@@ -308,23 +308,23 @@ function HowItWorksSection() {
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {modes.map((m) => (
-            <div key={m.num} className="relative rounded-lg border border-border bg-white p-6 shadow-sm">
+            <div key={m.num} className="relative rounded-xl border border-border bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[11px] tracking-wider text-slate-400">MODE {m.num}</span>
                 {m.icon}
               </div>
-              <h3 className="mt-4 text-lg font-semibold tracking-tight">{m.title}</h3>
+              <h3 className="mt-4 text-base font-semibold tracking-tight">{m.title}</h3>
               <p className="mt-1 font-mono text-[11px] text-info">{m.trigger}</p>
               <p className="mt-3 text-sm leading-relaxed text-slate-500">{m.desc}</p>
             </div>
           ))}
         </div>
-        <div className="mt-10 grid gap-4 rounded-lg border border-border bg-white p-6 md:grid-cols-4">
+        <div className="mt-6 grid gap-6 rounded-xl border border-border bg-white px-8 py-6 md:grid-cols-4">
           {steps.map((s) => (
             <div key={s.num} className="border-l-2 border-foreground pl-4">
               <div className="font-mono text-[11px] tracking-wider text-slate-400">STEP {s.num}</div>
               <div className="mt-1 text-sm font-semibold">{s.title}</div>
-              <div className="mt-1 text-xs text-slate-500">{s.desc}</div>
+              <div className="mt-1 text-xs leading-relaxed text-slate-500">{s.desc}</div>
             </div>
           ))}
         </div>
@@ -335,12 +335,36 @@ function HowItWorksSection() {
 
 function FeaturesSection() {
   const features = [
-    { icon: <Network className="h-4 w-4" />, title: 'Cross-source SQL', desc: 'Coral SQL JOINs across 7 sources — the only way to ask \'what did the team say while costs spiked after this commit?\'' },
-    { icon: <CircuitBoard className="h-4 w-4" />, title: 'Forensics graph', desc: 'React Flow dependency graph: commits → errors → cost spikes → Slack messages. Causal chains for any window.' },
-    { icon: <ShieldCheck className="h-4 w-4" />, title: 'HITL approval gate', desc: 'Interactive Slack Block Kit (HMAC-verified) and a web approval queue with full audit trail.' },
-    { icon: <Sparkles className="h-4 w-4" />, title: 'Schema drift detection', desc: 'Per-feature output snapshots, validated on every trace. Drift events blame the commit.' },
-    { icon: <Zap className="h-4 w-4" />, title: 'Loop kill switch', desc: 'Detects retry-loop signatures in Langfuse. One Slack button stops the bleeding before the bill arrives.' },
-    { icon: <Workflow className="h-4 w-4" />, title: 'Smart sampling', desc: 'Scores every trace — errors, cost spikes, novel patterns kept; routine noise dropped. ~85% volume reduction.' },
+    {
+      icon: <Network className="h-4 w-4" />,
+      title: 'Cross-source SQL',
+      desc: "Coral SQL JOINs across 7 sources — the only way to ask 'what did the team say while costs spiked after this commit?'",
+    },
+    {
+      icon: <CircuitBoard className="h-4 w-4" />,
+      title: 'Forensics graph',
+      desc: 'React Flow dependency graph: commits → errors → cost spikes → Slack messages. Causal chains for any window.',
+    },
+    {
+      icon: <ShieldCheck className="h-4 w-4" />,
+      title: 'HITL approval gate',
+      desc: 'Interactive Slack Block Kit (HMAC-verified) and a web approval queue with full audit trail.',
+    },
+    {
+      icon: <Sparkles className="h-4 w-4" />,
+      title: 'Schema drift detection',
+      desc: 'Per-feature output snapshots, validated on every trace. Drift events blame the commit.',
+    },
+    {
+      icon: <Zap className="h-4 w-4" />,
+      title: 'Loop kill switch',
+      desc: 'Detects retry-loop signatures in Langfuse. One Slack button stops the bleeding before the bill arrives.',
+    },
+    {
+      icon: <Workflow className="h-4 w-4" />,
+      title: 'Smart sampling',
+      desc: 'Scores every trace — errors, cost spikes, novel patterns kept; routine noise dropped. ~85% volume reduction.',
+    },
   ]
   return (
     <section id="features" className="border-b border-border">
@@ -354,10 +378,10 @@ function FeaturesSection() {
             Next.js + FastAPI, deployed on Vercel and Railway. React Flow forensics graph. Slack Block Kit write-back, HMAC verified.
           </p>
         </div>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="group bg-white p-6 transition-colors hover:bg-slate-50">
-              <span className="grid h-9 w-9 place-items-center rounded border border-border bg-background text-info">
+            <div key={f.title} className="group bg-white p-6 transition-colors hover:bg-slate-50/80">
+              <span className="grid h-9 w-9 place-items-center rounded border border-slate-200 bg-white text-info shadow-sm">
                 {f.icon}
               </span>
               <h3 className="mt-4 text-base font-semibold tracking-tight">{f.title}</h3>
