@@ -3,7 +3,6 @@ import {
   ShieldCheck, Zap, GitBranch, TriangleAlert, Hand, Activity,
   MessageSquare, Network, CircuitBoard, Sparkles, Workflow,
   Siren, GitPullRequest, ChartLine, DollarSign, Boxes, CodeXml,
-  Hash,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -42,7 +41,6 @@ function Header() {
           <a href="#sources" className="hover:text-foreground transition-colors">Sources</a>
         </nav>
         <div className="flex items-center gap-3">
-          <a href="#" className="hidden text-sm text-slate-500 hover:text-foreground transition-colors sm:inline">Docs</a>
           <Link href="/dashboard" className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:opacity-90 transition-opacity">
             Get started
           </Link>
@@ -462,12 +460,12 @@ function CtaSection() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/dashboard"
-                  className="rounded-md bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-2 rounded-md bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
                 >
-                  Deploy on Railway + Vercel
+                  Open Command Center <Zap className="h-4 w-4" />
                 </Link>
-                <a href="#" className="inline-flex items-center gap-2 rounded-md border border-background/30 px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-background/10">
-                  <Hash className="h-4 w-4" /> Install Slack app
+                <a href="https://github.com/Himanshu-Parangat/sentinel" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md border border-background/30 px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-background/10">
+                  <GitBranch className="h-4 w-4" /> View on GitHub
                 </a>
               </div>
             </div>
@@ -501,8 +499,7 @@ function Footer() {
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <span className="font-mono uppercase tracking-wider">Built for Coral OSS</span>
-          <a href="https://github.com/Himanshu-Parangat/sentinel" className="hover:text-foreground transition-colors">GitHub</a>
-          <a href="#" className="hover:text-foreground transition-colors">Docs</a>
+          <a href="https://github.com/Himanshu-Parangat/sentinel" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
           <a href="#" className="hover:text-foreground transition-colors">Hackathon entry</a>
         </div>
       </div>
