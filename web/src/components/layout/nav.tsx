@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -36,10 +37,11 @@ export function Nav() {
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
-            <span className="text-white text-xs font-bold tracking-tight">S</span>
+          <Image src="/logo.png" alt="Sentinel logo" width={32} height={32} className="h-8 w-8" priority />
+          <div className="flex flex-col leading-none">
+            <span className="font-bold text-slate-900 text-sm tracking-wide uppercase">Sentinel</span>
+            <span className="text-[9px] font-medium text-indigo-500 tracking-widest uppercase">AI Observability & Response</span>
           </div>
-          <span className="font-semibold text-slate-900 text-sm">Sentinel</span>
         </div>
 
         <nav className="flex items-center gap-0.5">

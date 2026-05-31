@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   ShieldCheck, Zap, GitBranch, TriangleAlert, Hand, Activity,
   MessageSquare, Network, CircuitBoard, Sparkles, Workflow,
@@ -25,12 +26,15 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-        <div className="flex items-center gap-2">
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-foreground text-background">
-            <ShieldCheck className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="Sentinel logo" width={36} height={36} className="h-9 w-9" priority />
+            <div className="flex flex-col leading-none">
+              <span className="font-bold text-foreground text-sm tracking-wide uppercase">Sentinel</span>
+              <span className="text-[9px] font-medium text-indigo-500 tracking-widest uppercase">AI Observability & Response</span>
+            </div>
           </div>
-          <span className="text-sm font-semibold tracking-tight">Sentinel</span>
-          <span className="ml-2 rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+          <span className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-slate-500">
             v0.1 · Coral OSS
           </span>
         </div>
@@ -491,11 +495,11 @@ function Footer() {
     <footer className="bg-background border-t border-border">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <div className="grid h-5 w-5 place-items-center rounded bg-foreground text-background">
-            <ShieldCheck className="h-3 w-3" />
+          <Image src="/logo.png" alt="Sentinel logo" width={22} height={22} className="h-5 w-5 opacity-80" />
+          <div className="flex flex-col leading-none">
+            <span className="font-bold text-foreground text-xs tracking-wide uppercase">Sentinel</span>
+            <span className="text-[8px] font-medium text-indigo-400 tracking-widest uppercase">AI Observability & Response</span>
           </div>
-          <span className="font-semibold text-foreground">Sentinel</span>
-          <span>· AI Observability Agent</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <span className="font-mono uppercase tracking-wider">Built for Coral OSS</span>
