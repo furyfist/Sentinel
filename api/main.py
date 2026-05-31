@@ -24,18 +24,18 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-def _maybe_seed():
-    if os.environ.get("DEMO_MODE", "").lower() in ("1", "true", "yes"):
-        try:
-            import subprocess, sys
-            subprocess.run(
-                [sys.executable, "scripts/seed_demo_sqlite.py"],
-                check=False,
-                timeout=30,
-            )
-        except Exception as e:
-            print(f"[demo seed] warning: {e}")
+if os.environ.get("DEMO_MODE", "").lower() in ("1", "true", "yes"):
+    try:
+        from scripts.seed_demo_sqlite import (
+            _already_seeded, seed_incidents, seed_loops, seed_approvals,
+            seed_drift, seed_sampling, seed_file_risk,
+        )
+        if not _already_seeded():
+            seed_incidents(); seed_loops(); seed_approvals()
+            seed_drift(); seed_sampling(); seed_file_risk()
+            print("[demo] seed complete")
+    except Exception as e:
+        print(f"[demo seed] warning: {e}")
 
 app.include_router(incidents.router, prefix="/api")
 app.include_router(risk.router, prefix="/api")
