@@ -110,7 +110,7 @@ export default function DashboardPage() {
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5">
                 <div
-                  className="bg-indigo-500 h-1.5 rounded-full"
+                  className="bg-blue-500 h-1.5 rounded-full"
                   style={{ width: `${Math.round((sampling.sampled_traces / sampling.total_traces) * 100)}%` }}
                 />
               </div>

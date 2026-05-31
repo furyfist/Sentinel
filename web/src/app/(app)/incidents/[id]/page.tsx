@@ -75,7 +75,7 @@ export default function IncidentDetailPage() {
   if (!incident) {
     return (
       <div className="text-center py-20 text-slate-400">
-        Incident not found. <Link href="/incidents" className="text-indigo-500 underline">Back to list</Link>
+        Incident not found. <Link href="/incidents" className="text-blue-500 underline">Back to list</Link>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function IncidentDetailPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
       <div>
-        <Link href="/incidents" className="text-sm text-indigo-500 hover:text-indigo-700 transition-colors">← Back to Incidents</Link>
+        <Link href="/incidents" className="text-sm text-blue-500 hover:text-blue-700 transition-colors">← Back to Incidents</Link>
         <div className="flex items-center gap-3 mt-3">
           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${badgeStyle}`}>
             {incident.severity ?? 'info'}
@@ -102,7 +102,7 @@ export default function IncidentDetailPage() {
             key={t}
             onClick={() => handleTabChange(t)}
             className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
-              tab === t ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+              tab === t ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             {t === 'graph' ? 'Dependency Graph' : 'Report'}
@@ -134,7 +134,7 @@ export default function IncidentDetailPage() {
                   {commitsLoading
                     ? incident.related_commits.map((sha) => (
                         <div key={sha} className="flex items-center gap-2.5 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
-                          <span className="font-mono text-xs text-indigo-400">{sha.slice(0, 7)}</span>
+                          <span className="font-mono text-xs text-blue-400">{sha.slice(0, 7)}</span>
                           <div className="h-3 flex-1 bg-slate-200 rounded animate-pulse" />
                         </div>
                       ))
@@ -143,8 +143,8 @@ export default function IncidentDetailPage() {
                         const url = detail?.url ?? `${githubBase}/${sha}`
                         return (
                           <a key={sha} href={url} target="_blank" rel="noopener noreferrer"
-                            className="flex items-start gap-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 px-3 py-2 rounded-lg transition-colors group">
-                            <span className="font-mono text-xs text-indigo-600 shrink-0 mt-0.5 group-hover:text-indigo-700">{sha.slice(0, 7)}</span>
+                            className="flex items-start gap-2.5 bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 px-3 py-2 rounded-lg transition-colors group">
+                            <span className="font-mono text-xs text-blue-600 shrink-0 mt-0.5 group-hover:text-blue-700">{sha.slice(0, 7)}</span>
                             <span className="text-xs text-slate-600 leading-relaxed truncate">{detail?.message ?? sha.slice(0, 20)}</span>
                           </a>
                         )

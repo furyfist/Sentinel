@@ -169,7 +169,7 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => handleApprove(item.id)}
                         disabled={acting === item.id}
-                        className="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                       >
                         Approve
                       </button>

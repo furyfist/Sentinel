@@ -6,7 +6,7 @@ interface StatCardProps {
   label: string
   value: string | number
   sub?: string
-  accent?: 'default' | 'green' | 'red' | 'amber' | 'indigo'
+  accent?: 'default' | 'green' | 'red' | 'amber' | 'blue'
   delay?: number
 }
 
@@ -15,7 +15,7 @@ const accents = {
   green:   'text-emerald-600',
   red:     'text-red-500',
   amber:   'text-amber-500',
-  indigo:  'text-indigo-600',
+  blue:  'text-blue-600',
 }
 
 export function StatCard({ label, value, sub, accent = 'default', delay = 0 }: StatCardProps) {

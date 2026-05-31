@@ -73,8 +73,8 @@ export default function ForensicsPage() {
                 onClick={() => loadTraceGraph(t.trace_id)}
                 className={`text-left rounded-lg border p-3 text-xs transition-all ${
                   selectedTrace === t.trace_id
-                    ? 'border-indigo-300 bg-indigo-50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-slate-50'
+                    ? 'border-blue-300 bg-blue-50 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'
                 }`}
               >
                 <div className="font-mono text-slate-500 text-[10px]">{t.trace_id.slice(0, 12)}…</div>
@@ -91,7 +91,7 @@ export default function ForensicsPage() {
               <button
                 onClick={() => setViewMode('trace')}
                 className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  viewMode === 'trace' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                  viewMode === 'trace' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:border-blue-300'
                 }`}
               >
                 Trace Graph
@@ -102,7 +102,7 @@ export default function ForensicsPage() {
                   if (t) loadIncidentGraph(t)
                 }}
                 className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  viewMode === 'incident' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                  viewMode === 'incident' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:border-blue-300'
                 }`}
               >
                 View Incident Graph

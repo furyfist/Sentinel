@@ -66,7 +66,7 @@ export default function SettingsPage() {
                 step={step}
                 value={settings[key]}
                 onChange={(e) => handleChange(key, e.target.value)}
-                className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-mono text-slate-800 text-right focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
+                className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-mono text-slate-800 text-right focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
               />
             </div>
           ))
@@ -82,7 +82,7 @@ export default function SettingsPage() {
         <button
           onClick={handleSave}
           disabled={saving || !settings}
-          className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+          className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
         >
           {saving ? 'Saving…' : 'Save Settings'}
         </button>

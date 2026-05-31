@@ -31,7 +31,7 @@ function Header() {
             <Image src="/logo.png" alt="Sentinel logo" width={36} height={36} className="h-9 w-9" priority />
             <div className="flex flex-col leading-none">
               <span className="font-bold text-foreground text-sm tracking-wide uppercase">Sentinel</span>
-              <span className="text-[9px] font-medium text-indigo-500 tracking-widest uppercase">AI Observability & Response</span>
+              <span className="text-[9px] font-medium text-blue-500 tracking-widest uppercase">AI Observability & Response</span>
             </div>
           </div>
           <span className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-slate-500">
@@ -498,7 +498,7 @@ function Footer() {
           <Image src="/logo.png" alt="Sentinel logo" width={22} height={22} className="h-5 w-5 opacity-80" />
           <div className="flex flex-col leading-none">
             <span className="font-bold text-foreground text-xs tracking-wide uppercase">Sentinel</span>
-            <span className="text-[8px] font-medium text-indigo-400 tracking-widest uppercase">AI Observability & Response</span>
+            <span className="text-[8px] font-medium text-blue-400 tracking-widest uppercase">AI Observability & Response</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
