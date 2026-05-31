@@ -26,13 +26,16 @@ app.add_middleware(
 
 if os.environ.get("DEMO_MODE", "").lower() in ("1", "true", "yes"):
     try:
-        from scripts.seed_demo_sqlite import (
-            _already_seeded, seed_incidents, seed_loops, seed_approvals,
-            seed_drift, seed_sampling, seed_file_risk,
+        import importlib.util, sys as _sys
+        _spec = importlib.util.spec_from_file_location(
+            "seed_demo_sqlite",
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "seed_demo_sqlite.py"),
         )
-        if not _already_seeded():
-            seed_incidents(); seed_loops(); seed_approvals()
-            seed_drift(); seed_sampling(); seed_file_risk()
+        _seed = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_seed)
+        if not _seed._already_seeded():
+            _seed.seed_incidents(); _seed.seed_loops(); _seed.seed_approvals()
+            _seed.seed_drift(); _seed.seed_sampling(); _seed.seed_file_risk()
             print("[demo] seed complete")
     except Exception as e:
         print(f"[demo seed] warning: {e}")
