@@ -114,7 +114,13 @@ What happens:
 
 ## Step 6 — PR Risk Scorer → PR comment on GitHub
 
-Open a real PR on your GitHub repo, then:
+Open the demo PR (touches `oncall_brain.py` and `loop_detector.py` — two historically risky files):
+
+```bash
+python scripts/open_demo_pr.py
+```
+
+This creates a branch `demo/retry-logic-patch`, commits changes to the two high-risk files, and opens a PR. It prints the PR number when done. Then run the scorer:
 
 ```bash
 python agent/modes/pr_risk_scorer.py --pr <PR_NUMBER>
