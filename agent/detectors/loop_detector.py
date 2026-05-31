@@ -1,3 +1,4 @@
+# retry-logic: relaxed loop threshold for high-throughput workloads
 from collections import Counter
 from agent.config import AGENT_LOOP_GENERATION_THRESHOLD
 
