@@ -9,7 +9,6 @@ COPY agent/ ./agent/
 COPY api/ ./api/
 COPY sources/ ./sources/
 COPY scripts/ ./scripts/
-COPY settings.json ./settings.json
 
 ENV PYTHONUNBUFFERED=1
 ENV DEMO_MODE=true
