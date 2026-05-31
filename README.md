@@ -38,23 +38,9 @@ The system has four layers.
 
 **The web layer** is a Next.js command center that reads from the FastAPI backend. It gives a live view of every table in the system: active incidents, loop detections with fingerprints, drift events with blame commits, the HITL approval queue, PR risk history, the forensics causal graph, and the weekly digest.
 
-```
-Langfuse · Sentry · GitHub · Slack · Datadog · PagerDuty · Linear
-                          |
-                     Coral SQL
-                          |
-         Python Agent (APScheduler + FastAPI)
-          |              |              |
-    Detectors       Narration       Governance
-    (5 classes)    (Groq LLM)    (HITL approval)
-          |              |              |
-        Slack         GitHub         SQLite
-     (alerts +       (issues +      (audit
-      buttons)       PR comments)    trail)
-          |
-    Next.js UI
-    (8 pages)
-```
+![Architecture](web/public/artitecture.png)
+
+![Web Layer](web/public/web_layer.png)
 
 
 ## How Each Component Works
