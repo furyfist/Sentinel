@@ -40,30 +40,44 @@ LIMIT 5
 """
 
 
-def run():
-    print(f"\nRunning commit-to-cost blame query ({GITHUB_OWNER}/{GITHUB_REPO})...\n")
+FALLBACK_ROWS = [
+    {"sha": "d9c3e11fa8b2", "commit_message": "feat: increase max_tokens in summariser pipeline", "author": "furyfist", "errors_after_commit": 0, "cost_after_commit": 4.2034},
+    {"sha": "f1a8b33c9e41", "commit_message": "refactor: rewrite support-bot prompt to Q&A format", "author": "furyfist", "errors_after_commit": 2, "cost_after_commit": 0.0512},
+    {"sha": "c7a2e81d3f90", "commit_message": "fix: retry-search exit condition after empty results", "author": "furyfist", "errors_after_commit": 1, "cost_after_commit": 0.2803},
+    {"sha": "0267c5eb19ea", "commit_message": "fix: remove healthcheck and fix seed script import path", "author": "furyfist", "errors_after_commit": 0, "cost_after_commit": 0.0},
+    {"sha": "61b76d3a9c12", "commit_message": "fix: run demo seed at import time to avoid blocking", "author": "furyfist", "errors_after_commit": 0, "cost_after_commit": 0.0},
+]
 
-    rows = coral_client.query(SQL, timeout=60)
 
-    if not rows:
-        print("No results. Make sure Langfuse and GitHub sources are registered in Coral.")
-        return
-
+def _print_table(rows):
     print(f"{'#':<3}  {'SHA':<12}  {'COST ($)':<10}  {'ERRORS':<7}  {'AUTHOR':<12}  COMMIT")
     print("-" * 90)
-
     for i, row in enumerate(rows, 1):
         sha     = str(row.get("sha", ""))[:12]
         cost    = row.get("cost_after_commit") or 0
         errors  = row.get("errors_after_commit") or 0
         author  = str(row.get("author", ""))[:12]
         message = str(row.get("commit_message", ""))[:50]
-
         print(f"{i:<3}  {sha:<12}  ${float(cost):<9.4f}  {int(errors):<7}  {author:<12}  {message}")
-
     print()
     print("Raw JSON:")
     print(json.dumps(rows, indent=2, default=str))
+
+
+def run():
+    print(f"\nRunning commit-to-cost blame query ({GITHUB_OWNER}/{GITHUB_REPO})...\n")
+
+    try:
+        rows = coral_client.query(SQL, timeout=60)
+    except Exception as e:
+        print(f"[warn] Coral live query failed ({e}), using seeded demo data.\n")
+        rows = FALLBACK_ROWS
+
+    if not rows:
+        print("No results. Make sure Langfuse and GitHub sources are registered in Coral.")
+        return
+
+    _print_table(rows)
 
 
 if __name__ == "__main__":

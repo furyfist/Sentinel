@@ -4,7 +4,22 @@ Sentinel is an AI-powered engineering observability agent built for the **Pirate
 
 The core problem it solves: when an AI-powered product breaks in production, the failure signal is almost never in one place. Cost anomalies live in Langfuse. Errors live in Sentry. The deploy that caused them lives in GitHub. The on-call conversation lives in Slack. A developer diagnosing an incident has to open four tabs, correlate timestamps manually, and write the post-mortem from memory. Sentinel eliminates that entirely — it joins all four data sources in a single SQL query, detects the anomaly automatically, writes the RCA using an LLM, and notifies the right people with an actionable report and one-click remediation buttons before the developer has even opened their laptop.
 
-Built for **Pirates of the Coral-bean** (WeMakeDevs × Coral).
+
+## Architecture
+
+The system has four layers — data, agent, governance, and web.
+
+![Web Layer](web/public/web_layer.png)
+
+**The data layer** is Coral SQL. Every source — Langfuse, Sentry, GitHub, Slack, Datadog, PagerDuty, Linear — is registered as a Coral source and queried through a single subprocess call: `coral sql --format json "<query>"`. Sentinel can write a single SQL statement that joins GitHub commits with Sentry issues and Langfuse observations across their shared time windows, with no bespoke API client code per source.
+
+**The agent layer** is a set of Python detectors and modes scheduled by APScheduler. The On-Call Brain runs every 15 minutes and, when triggered, runs a full 7-step investigation pipeline. The Drift Patrol runs every 4 hours scanning all active features for schema contract violations. A weekly digest runs every Monday at 09:00. PR risk scoring is triggered on-demand per PR number and posts directly to GitHub.
+
+**The governance layer** sits between detection and execution. Every anomaly result carries a `suggested_action` and a `requires_approval` flag. The approval gate auto-acts on critical anomalies (>20 loop generations or >$10/hr cost spike) and queues everything else as an interactive Slack message with Approve and Reject buttons. Approvals expire after 4 hours.
+
+**The web layer** is a Next.js command center with eight pages: Dashboard, Incidents, Forensics, Risk, Quality, Approvals, Digest, and Settings.
+
+![Architecture](web/public/artitecture.png)
 
 
 ## The Problem Space
@@ -26,21 +41,58 @@ These are the five failure classes Sentinel detects:
 **Silent tool failures.** Tool calls that return successfully at the HTTP level but produce wrong, empty, or malformed outputs are the hardest class of failure to detect because nothing in the stack throws an error. Sentinel runs three detection strategies in parallel: it looks for SPAN observations whose output type changed from JSON to non-JSON (schema failure), it cross-references SPAN timestamps against Sentry issue windows within 5 minutes (correlation failure), and it computes a rolling average output length per tool name to catch observations whose output is less than 20% of historical average (output anomaly).
 
 
-## Architecture
+## Web UI
 
-The system has four layers.
+The Next.js command center has eight pages.
 
-**The data layer** is Coral SQL. Every data source — Langfuse, Sentry, GitHub, Slack, Datadog, PagerDuty, Linear — is registered as a Coral source and queried through a single subprocess call: `coral sql --format json "<query>"`. This means Sentinel can write a single SQL statement that joins GitHub commits with Sentry issues and Langfuse observations across their shared time windows, with no bespoke API client code per source. The Langfuse source is a custom spec we wrote and open-sourced in `sources/langfuse/` — it exposes five tables (traces, observations, scores, sessions, projects) over HTTP Basic Auth with page-based pagination.
+**Dashboard** shows four stat cards (total incidents, projected 6-hour cost, active loops, pending approvals), a Coral health indicator, and the recent incident feed. The sampling stats panel shows noise reduction numbers — total traces seen vs kept — so it's clear how much irrelevant signal is being filtered.
 
-**The agent layer** is a set of Python detectors and modes scheduled by APScheduler. The On-Call Brain runs every 15 minutes, checks for cost spikes, and if triggered runs the full 7-step investigation pipeline. The Drift Patrol runs every 4 hours and scans all active features for schema contract violations. A weekly digest runs every Monday at 09:00 and produces a structured three-section summary of what shipped, what broke, and what to watch. PR risk scoring is triggered on-demand per PR number and posts directly to GitHub.
+![Dashboard](web/public/dashboard.png)
 
-**The governance layer** sits between detection and execution. Every anomaly result carries a `suggested_action` and a `requires_approval` flag. The approval gate inspects the anomaly — if it's a loop with more than 20 generations, or a cost spike already past $10/hr, it auto-acts immediately and posts a notification. Everything else is written to an `approval_queue` table in SQLite and surfaced as an interactive Slack message with Approve and Reject buttons. Approvals expire after 4 hours with the Slack message updating in place.
+**Incidents** lists all detected incidents with severity badges and timestamps. Each row shows the detection type, cost impact, and a truncated preview of the narrated report. Clicking through shows the full RCA text.
 
-**The web layer** is a Next.js command center that reads from the FastAPI backend. It gives a live view of every table in the system: active incidents, loop detections with fingerprints, drift events with blame commits, the HITL approval queue, PR risk history, the forensics causal graph, and the weekly digest.
+![Incidents](web/public/incidents.png)
 
-![Architecture](web/public/artitecture.png)
+**Forensics** renders the React Flow causal graph for the selected incident window. Nodes are color-coded by type (commits, errors, traces, messages). Edges connect them based on temporal proximity — commits link to error nodes that appeared within 24 hours, error nodes link to trace nodes whose windows overlap. The trace reconstructor also builds a separate DAG view of the observation chain within a single trace, with cost and error level markers on each node.
 
-![Web Layer](web/public/web_layer.png)
+![Forensics](web/public/forensics.png)
+
+**Quality** shows schema snapshots for all observed features and the drift event log. The snapshot panel shows the inferred schema keys and types. The drift panel shows the blame commit alongside the fail rate and drift type. A "Trigger Scan" button fires `POST /api/quality/scan` to run the drift patrol immediately without waiting for the 4-hour schedule.
+
+![Quality](web/public/quality.png)
+
+**Digest** renders the latest weekly digest as formatted markdown — what shipped, what broke, what to watch — generated every Monday from merged PRs, Sentry error rates, and Langfuse cost trends.
+
+![Weekly Digest](web/public/weekly_digest.png)
+
+**Approvals** is the HITL queue UI. Pending rows show the action type, severity, summary, and time remaining before expiry. Approve and Reject buttons call the same FastAPI endpoints that the Slack buttons do.
+
+**Risk** shows the file risk history table and the risk score breakdown for recent PRs.
+
+**Settings** exposes the runtime threshold configuration backed by `settings.json`: the cost spike multiplier, PR risk threshold, loop generation threshold, and error cascade threshold.
+
+
+## Notifications and Remediation
+
+When an incident is detected, Sentinel posts a narrated report to Slack in real time. The message includes what happened, the likely cause, cost impact, and interactive Approve / Reject / Kill Loop buttons. Clicking a button calls back to the FastAPI server via an HMAC-signed webhook at `/api/slack/actions`.
+
+![Slack Alert](web/public/slack_ss.png)
+
+When an incident crosses the severity threshold or is approved through the HITL queue, Sentinel opens a GitHub issue automatically — structured with what happened, likely cause, impact, and recommended action.
+
+![GitHub Issue](web/public/github_issue_by_sentinel.png)
+
+### Slack Interactivity via ngrok
+
+Slack button callbacks require a publicly reachable HTTPS endpoint. During development, the local FastAPI server is tunnelled through [ngrok](https://ngrok.com) and the resulting URL is set as the Interactivity Request URL in the Slack app settings.
+
+```bash
+ngrok http 8000
+# copy the https://<id>.ngrok-free.app URL
+# paste it into Slack App → Interactivity & Shortcuts → Request URL → <url>/api/slack/actions
+```
+
+![Slack Interactivity Setup](web/public/interactivity_slackViaNgrok.png)
 
 
 ## How Each Component Works
@@ -87,7 +139,7 @@ Three strategies run in parallel and results are deduplicated by `strategy:trace
 
 ### Governance and approval gate
 
-The `ApprovalGate.route()` method is the decision point. For anomalies that cross the auto-act thresholds (>20 loop generations or >$10/hr cost), it calls `execute_action()` immediately, writes an audit row to SQLite, and posts a notification. For everything else, it calls `create_approval_request()` to write a row to `approval_queue`, then `post_approval_to_slack()` to send the interactive message. The Slack message uses Block Kit with Approve and Reject action buttons carrying the `approval_id` in their `value` field. The HMAC-signed webhook endpoint at `/api/slack/actions` receives the button click, verifies the signature, extracts the `action_id`, and dispatches to `_handle_approve`, `_handle_reject`, or `_handle_kill_loop`. On approve, it calls `gate.execute_action_for_approval(approval)` which runs the appropriate action (kill loop in SQLite, or create GitHub issue), then updates the approval row to `approved` with the Slack user ID and timestamp. The Slack message is replaced in-place via `response_url`. A separate 30-minute APScheduler job calls `expire_stale_approvals()`, which finds rows past their `expires_at` timestamp and updates the Slack message to "⏰ Approval expired (no action taken)".
+The `ApprovalGate.route()` method is the decision point. For anomalies that cross the auto-act thresholds (>20 loop generations or >$10/hr cost), it calls `execute_action()` immediately, writes an audit row to SQLite, and posts a notification. For everything else, it calls `create_approval_request()` to write a row to `approval_queue`, then `post_approval_to_slack()` to send the interactive message. The Slack message uses Block Kit with Approve and Reject action buttons carrying the `approval_id` in their `value` field. The HMAC-signed webhook endpoint at `/api/slack/actions` receives the button click, verifies the signature, extracts the `action_id`, and dispatches to `_handle_approve`, `_handle_reject`, or `_handle_kill_loop`. On approve, it calls `gate.execute_action_for_approval(approval)` which runs the appropriate action (kill loop in SQLite, or create GitHub issue), then updates the approval row to `approved` with the Slack user ID and timestamp. The Slack message is replaced in-place via `response_url`. A separate 30-minute APScheduler job calls `expire_stale_approvals()`, which finds rows past their `expires_at` timestamp and updates the Slack message to "Approval expired (no action taken)".
 
 ### PR risk scorer
 
@@ -135,27 +187,6 @@ The Drift Patrol runs every 4 hours. It fetches all distinct GENERATION observat
 The Weekly Digest runs every Monday at 09:00. It queries merged PRs from the last 7 days, Sentry error rates from the last 48 hours, and Langfuse cost trends from the last 24 hours, then produces a three-section markdown report and posts it to Slack.
 
 The approval expiry job runs every 30 minutes. It finds all `approval_queue` rows where `expires_at` has passed and `status` is still `pending`, marks them `expired`, and fires a Slack `chat.update` call to replace the interactive message with an expiry notice.
-
-
-## Web UI
-
-The Next.js command center has eight pages.
-
-**Dashboard** shows four stat cards (total incidents, projected 6-hour cost, active loops, pending approvals), a Coral health indicator, and the recent incident feed. The sampling stats panel shows noise reduction numbers — total traces seen vs kept — so it's clear how much irrelevant signal is being filtered.
-
-**Incidents** lists all detected incidents with severity badges and timestamps. Each row shows the detection type, cost impact, and a truncated preview of the narrated report. Clicking through shows the full RCA text.
-
-**Forensics** renders the React Flow causal graph for the selected incident window. Nodes are color-coded by type (commits, errors, traces, messages). The trace reconstructor also builds a separate DAG view of the observation chain within a single trace, with cost and error level markers on each node.
-
-**Risk** shows the file risk history table and the risk score breakdown for recent PRs. Each file has a sparkline of its historical error and cost delta across commits, making high-risk files obvious at a glance.
-
-**Quality** shows schema snapshots for all observed features and the drift event log. The snapshot panel shows the inferred schema keys and types. The drift panel shows the blame commit alongside the fail rate and drift type. A "Trigger Scan" button fires `POST /api/quality/scan` to run the drift patrol immediately without waiting for the 4-hour schedule.
-
-**Approvals** is the HITL queue UI. Pending rows show the action type, severity, summary, and time remaining before expiry. Approve and Reject buttons call the same FastAPI endpoints that the Slack buttons do — the same `execute_action_for_approval` logic runs either way.
-
-**Digest** renders the latest weekly digest as formatted markdown with the three-section structure.
-
-**Settings** exposes the runtime threshold configuration backed by `settings.json`: the cost spike multiplier, PR risk threshold, loop generation threshold, and error cascade threshold.
 
 
 ## Stack

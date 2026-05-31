@@ -2,7 +2,7 @@ import subprocess
 import json
 
 
-def query(sql: str, timeout: int = 30) -> list[dict]:
+def query(sql: str, timeout: int = 120) -> list[dict]:
     result = subprocess.run(
         ["coral", "sql", "--format", "json", sql],
         capture_output=True, text=True, timeout=timeout

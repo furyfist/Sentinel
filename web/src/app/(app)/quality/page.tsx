@@ -37,6 +37,14 @@ export default function QualityPage() {
                 <div>
                   <span className="text-sm font-medium text-slate-800">{String(e.feature_name ?? '—')}</span>
                   <span className="ml-3 text-xs text-slate-400">{String(e.drift_type ?? '')}</span>
+                  {e.validation_fail_rate != null && (
+                    <span className="ml-3 text-xs text-slate-400">fail rate: {(Number(e.validation_fail_rate) * 100).toFixed(0)}%</span>
+                  )}
+                  {e.blame_commit_sha && (
+                    <span className="ml-3 text-xs font-mono text-slate-400" title={String(e.blame_commit_message ?? '')}>
+                      {String(e.blame_commit_sha).slice(0, 8)} — {String(e.blame_commit_message ?? '').slice(0, 60)}
+                    </span>
+                  )}
                 </div>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg border ${
                   e.severity === 'critical' ? 'bg-red-50 text-red-700 border-red-200' :

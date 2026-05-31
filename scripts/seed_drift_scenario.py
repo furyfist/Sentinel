@@ -14,7 +14,7 @@ Step 4: Run drift_patrol --dry-run to verify detection.
 
 Usage:
   python scripts/seed_drift_scenario.py
-  .\venv\Scripts\python agent/modes/drift_patrol.py --dry-run
+  .\\venv\\Scripts\\python agent/modes/drift_patrol.py --dry-run
 """
 import os
 import sys
