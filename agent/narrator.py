@@ -1,12 +1,19 @@
 import json
-from groq import Groq
 from agent.config import GROQ_API_KEY, GROQ_MODEL
 
-_client = Groq(api_key=GROQ_API_KEY)
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        from groq import Groq
+        _client = Groq(api_key=GROQ_API_KEY)
+    return _client
 
 
 def _call(system: str, user: str, max_tokens: int = 1000) -> str:
-    response = _client.chat.completions.create(
+    response = _get_client().chat.completions.create(
         model=GROQ_MODEL,
         max_tokens=max_tokens,
         messages=[
