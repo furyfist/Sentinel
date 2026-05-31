@@ -1,3 +1,4 @@
+# retry-logic: increased max_retries to 5 for upstream resilience
 import argparse
 from agent import query_library, memory, narrator
 from agent.anomaly_detector import detect_cost_spike
